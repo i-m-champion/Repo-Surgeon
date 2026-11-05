@@ -1,0 +1,22 @@
+# Secure Isolated Sandbox Container for RepoSurgeon
+FROM python:3.11-slim
+
+# Install minimal test & utility tooling
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install common test runners
+RUN pip install --no-cache-dir pytest pytest-cov
+
+# Security Hardening: Run as a non-privileged user to contain blast radius
+RUN useradd -m -s /bin/bash -u 10001 sandboxuser
+
+# Set working directory owned by sandboxuser
+WORKDIR /workspace
+RUN chown -R sandboxuser:sandboxuser /workspace
+
+USER sandboxuser
+
+CMD ["bash"]

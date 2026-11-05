@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reposurgeon-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - VULTR_API_KEY=${VULTR_API_KEY}
+      - VULTR_INFERENCE_BASE_URL=https://api.vultrinference.com/v1
+      - VULTR_MODEL=llama-3.3-70b-instruct
+      - USE_DOCKER_SANDBOX=false
+    volumes:
+      - ./demo-repos:/demo-repos
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reposurgeon-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
