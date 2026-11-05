@@ -72,7 +72,7 @@ cp .env.example .env
 # Edit .env and paste your VULTR_API_KEY
 
 # Start backend server
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 
 ### 2. Frontend Setup (In a separate terminal)

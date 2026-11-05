@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     USE_DOCKER_SANDBOX: bool = os.getenv("USE_DOCKER_SANDBOX", "true").lower() == "true"
     
     HOST: str = os.getenv("HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("PORT", "8000"))
+    PORT: int = int(os.getenv("PORT", "8001"))
 
     class Config:
         env_file = ".env"

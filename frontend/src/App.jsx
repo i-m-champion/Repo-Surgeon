@@ -24,7 +24,7 @@ export default function App() {
 
     // Establish WebSocket connection to backend
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/heal`;
+    const wsUrl = `${protocol}//${window.location.hostname}:8001/ws/heal`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -66,7 +66,7 @@ export default function App() {
         ...prev,
         {
           step: 'ERROR',
-          message: 'Unable to connect to RepoSurgeon backend (port 8000). Ensure the backend is running.'
+          message: 'Unable to connect to RepoSurgeon backend (port 8001). Ensure the backend is running.'
         }
       ]);
     };
@@ -84,7 +84,7 @@ export default function App() {
     setDiff('');
     setIsHealed(false);
     try {
-      await fetch(`http://${window.location.hostname}:8000/api/demos/${repoName}/reset`, {
+      await fetch(`http://${window.location.hostname}:8001/api/demos/${repoName}/reset`, {
         method: 'POST',
       });
     } catch (e) {
