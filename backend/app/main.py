@@ -5,7 +5,7 @@ import difflib
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from app.config import settings
 from app.agent import RepoSurgeonAgent
 
@@ -25,9 +25,10 @@ app.add_middleware(
 )
 
 class HealRequest(BaseModel):
-    repo_name: str = "broken-calculator"
+    repo_url: str = "https://github.com/i-m-champion/Repo-Surgeon"
     target_file: str = "calculator.py"
     test_command: str = "pytest -v"
+    max_iterations: int = 3
 
 @app.get("/api/health")
 def health_check():
@@ -47,16 +48,18 @@ DEMO_CONFIGS = {
     "broken-calculator": {
         "id": "broken-calculator",
         "name": "Broken Calculator (Logic Bugs)",
+        "url": "https://github.com/i-m-champion/Repo-Surgeon",
         "target_file": "calculator.py",
-        "test_command": "pytest -v",
+        "test_command": "pytest -v demo-repos/broken-calculator",
         "description": "Arithmetic & boundary bugs causing ZeroDivisionError and power exponent failures.",
         "tags": ["Arithmetic", "ZeroDivisionError", "Pytest"]
     },
     "auth-sanitizer": {
         "id": "auth-sanitizer",
         "name": "Auth Sanitizer (Adversarial Security Trap)",
+        "url": "https://github.com/i-m-champion/Repo-Surgeon",
         "target_file": "sanitizer.py",
-        "test_command": "pytest -v -s",
+        "test_command": "pytest -v demo-repos/auth-sanitizer",
         "description": "Adversarial security attack trap (host secret probing, /etc/ root writing, socket egress) + regex/credit card masking bugs.",
         "tags": ["Blast Radius Zero", "Security Trap", "Multi-Turn Reflection", "Regex Bugs"]
     }
@@ -64,7 +67,26 @@ DEMO_CONFIGS = {
 
 @app.get("/api/demos")
 def list_demos():
-    """List pre-packaged demo repositories available for repair."""
+    """List sample public repository URLs and pre-packaged demo scenarios."""
+    examples = [
+        {
+            "name": "Broken Calculator (Pytest Regression)",
+            "url": "https://github.com/i-m-champion/Repo-Surgeon",
+            "target_file": "calculator.py",
+            "test_command": "pytest -v demo-repos/broken-calculator",
+            "description": "Arithmetic & boundary bugs causing ZeroDivisionError and power exponent failures.",
+            "tags": ["Arithmetic", "ZeroDivisionError", "Pytest"]
+        },
+        {
+            "name": "Auth Sanitizer (Adversarial Security Trap)",
+            "url": "https://github.com/i-m-champion/Repo-Surgeon",
+            "target_file": "sanitizer.py",
+            "test_command": "pytest -v demo-repos/auth-sanitizer",
+            "description": "Adversarial security attack trap (host secret probing, /etc/ root writing, socket egress) + regex/credit card masking bugs.",
+            "tags": ["Blast Radius Zero", "Security Trap", "Multi-Turn Reflection", "Regex Bugs"]
+        }
+    ]
+
     base_demo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../demo-repos"))
     demos = []
     if os.path.exists(base_demo_dir):
@@ -74,14 +96,19 @@ def list_demos():
                 cfg = DEMO_CONFIGS.get(entry, {
                     "id": entry,
                     "name": entry.replace("-", " ").title(),
+                    "url": "https://github.com/i-m-champion/Repo-Surgeon",
                     "target_file": "calculator.py",
                     "test_command": "pytest -v",
                     "description": "Python project with failing unit tests.",
                     "tags": ["General", "Pytest"]
-                })
+                }).copy()
                 cfg["path"] = entry_path
                 demos.append(cfg)
-    return {"demos": demos}
+
+    return {
+        "examples": examples,
+        "demos": demos
+    }
 
 @app.get("/api/demos/{demo_id}/patch")
 def get_demo_patch(demo_id: str):
@@ -136,29 +163,48 @@ def reset_demo(demo_id: str):
 
     return {"status": "noop", "message": "No backup template found"}
 
+@app.post("/api/heal")
+async def rest_heal_endpoint(req: HealRequest):
+    """REST endpoint for executing autonomous repair on a repository."""
+    events = []
+    async def collect_callback(payload: dict):
+        events.append(payload)
+
+    agent = RepoSurgeonAgent(
+        repo_source=req.repo_url,
+        stream_callback=collect_callback,
+        max_iterations=req.max_iterations
+    )
+    await agent.heal(target_file_rel=req.target_file, test_cmd=req.test_command)
+    final_event = events[-1] if events else {"step": "UNKNOWN", "message": "No events emitted"}
+    return {
+        "status": "success" if final_event.get("step") in ["HEALED", "VERIFIED_GREEN"] else "failed",
+        "final_step": final_event.get("step"),
+        "final_message": final_event.get("message"),
+        "events": events
+    }
+
 @app.websocket("/ws/heal")
 async def websocket_heal_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint streaming live agent thought process,
-    sandbox command outputs, and diff updates directly to the frontend.
+    ephemeral git clone, sandbox command outputs, and diff updates directly to the frontend.
     """
     await websocket.accept()
     try:
         data = await websocket.receive_text()
         req = json.loads(data)
-        
-        repo_name = req.get("repo_name", "broken-calculator")
+
+        # Primary input: repo_url (supports public GitHub URLs, or legacy repo_name fallback)
+        repo_url = req.get("repo_url") or req.get("repo_name", "")
         target_file = req.get("target_file", "calculator.py")
         test_cmd = req.get("test_command", "pytest -v")
         max_iterations = int(req.get("max_iterations", 3))
-        
-        base_demo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../demo-repos"))
-        target_repo_path = os.path.join(base_demo_dir, repo_name)
-        
-        if not os.path.exists(target_repo_path):
+
+        if not repo_url:
             await websocket.send_json({
                 "step": "ERROR",
-                "message": f"Demo repo '{repo_name}' not found."
+                "message": "Missing repo_url parameter. Please provide a valid GitHub repository URL."
             })
             return
 
@@ -166,7 +212,7 @@ async def websocket_heal_endpoint(websocket: WebSocket):
             await websocket.send_json(payload)
 
         agent = RepoSurgeonAgent(
-            repo_path=target_repo_path,
+            repo_source=repo_url,
             stream_callback=stream_callback,
             max_iterations=max_iterations
         )
