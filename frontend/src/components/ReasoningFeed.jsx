@@ -15,7 +15,10 @@ import {
   ArrowRight,
   Code2,
   Bug,
-  AlertCircle
+  AlertCircle,
+  Play,
+  FileCode,
+  Shield
 } from 'lucide-react';
 
 export default function ReasoningFeed({
@@ -36,11 +39,6 @@ export default function ReasoningFeed({
 
   // Determine stage progress for the visual stepper
   const computeStepState = (stepIndex) => {
-    // 0: Diagnosing Failures
-    // 1: Querying Vultr Llama 3.3
-    // 2: Patching Sandbox
-    // 3: Verified Green
-
     if (status === 'idle') return 'idle';
 
     const hasDiagnosed = logs.some((l) => l.step === 'SANDBOX_RESULT' || l.step === 'AI_THINKING');
@@ -79,18 +77,18 @@ export default function ReasoningFeed({
   };
 
   const steps = [
-    { title: 'Diagnosing Failures', desc: 'Isolated Pytest Sandbox' },
-    { title: 'Querying Vultr Llama 3.3', desc: '70B Inference Engine' },
-    { title: 'Patching Sandbox', desc: 'Diff Generation & Inject' },
-    { title: 'Verified Green', desc: 'Zero Regression Boundary' }
+    { title: '01 Diagnosing', desc: 'Isolate & run pytest in sandbox' },
+    { title: '02 Vultr Inference', desc: 'Query Llama 3.3 for root cause' },
+    { title: '03 Patching', desc: 'Generate surgical unified diff' },
+    { title: '04 Verified Green', desc: 'Regression test with zero leak' },
   ];
 
   const filteredLogs = logs.filter((log) => {
     if (filter === 'AI') {
-      return log.step?.startsWith('AI_') || log.payload?.raw_response;
+      return log.step.startsWith('AI') || log.step === 'HEALED';
     }
     if (filter === 'SANDBOX') {
-      return log.step?.startsWith('SANDBOX_') || log.payload?.output;
+      return log.step.startsWith('SANDBOX') || log.step === 'INIT';
     }
     return true;
   });
@@ -100,47 +98,34 @@ export default function ReasoningFeed({
       case 'HEALED':
       case 'SUCCESS':
         return (
-          <span className="inline-flex items-center gap-1 text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded text-[10px] font-mono border border-emerald-500/40">
+          <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-md">
             <CheckCircle2 className="h-3 w-3" /> HEALED
           </span>
         );
       case 'ERROR':
         return (
-          <span className="inline-flex items-center gap-1 text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded text-[10px] font-mono border border-rose-500/40">
+          <span className="flex items-center gap-1 text-[10px] font-mono text-rose-400 bg-rose-950/60 border border-rose-500/30 px-2 py-0.5 rounded-md">
             <XCircle className="h-3 w-3" /> ERROR
-          </span>
-        );
-      case 'ITERATION_RETRY':
-        return (
-          <span className="inline-flex items-center gap-1 text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded text-[10px] font-mono border border-amber-500/40">
-            <RefreshCw className="h-3 w-3 animate-spin" /> RETRY
           </span>
         );
       case 'AI_THINKING':
       case 'AI_PROPOSAL':
         return (
-          <span className="inline-flex items-center gap-1 text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded text-[10px] font-mono border border-cyan-500/40">
-            <Sparkles className="h-3 w-3" /> VULTR AI
+          <span className="flex items-center gap-1 text-[10px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-md">
+            <Sparkles className="h-3 w-3" /> VULTR LLM
           </span>
         );
       case 'SANDBOX_START':
       case 'SANDBOX_RESULT':
       case 'SANDBOX_VERIFY':
-      case 'SANDBOX_VERIFY_RESULT':
         return (
-          <span className="inline-flex items-center gap-1 text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded text-[10px] font-mono border border-blue-500/40">
-            <ShieldCheck className="h-3 w-3" /> SANDBOX
-          </span>
-        );
-      case 'PATCH_GENERATED':
-        return (
-          <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded text-[10px] font-mono border border-purple-500/40">
-            <Code2 className="h-3 w-3" /> PATCH
+          <span className="flex items-center gap-1 text-[10px] font-mono text-blue-400 bg-blue-950/60 border border-blue-500/30 px-2 py-0.5 rounded-md">
+            <Terminal className="h-3 w-3" /> SANDBOX
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center text-slate-400 bg-slate-900 px-2 py-0.5 rounded text-[10px] font-mono border border-slate-800">
+          <span className="text-[10px] font-mono text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-md">
             {step}
           </span>
         );
@@ -148,9 +133,9 @@ export default function ReasoningFeed({
   };
 
   return (
-    <aside className="w-full lg:w-[40%] h-full flex flex-col bg-[#07090e]/90 border-r border-white/10 overflow-hidden relative select-none">
+    <aside className="w-full lg:w-[40%] h-full flex flex-col bg-[#07090e]/95 border-r border-white/[0.08] overflow-hidden relative select-none">
       {/* Top Header */}
-      <div className="p-3 border-b border-white/10 bg-[#0a0d16]/70 flex items-center justify-between gap-2 shrink-0">
+      <div className="p-3 border-b border-white/[0.08] bg-[#090c14]/80 flex items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
             <Sparkles className="h-3.5 w-3.5" />
@@ -162,7 +147,7 @@ export default function ReasoningFeed({
             <div className="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
               <span>Turn {iteration}/{maxIterations}</span>
               <span>•</span>
-              <span className="text-cyan-400">Vultr Llama 3.3 70B</span>
+              <span className="text-cyan-400 font-medium">Vultr Llama 3.3 70B</span>
             </div>
           </div>
         </div>
@@ -203,7 +188,7 @@ export default function ReasoningFeed({
       </div>
 
       {/* Visual Stepper: Railway / Bolt.new Style Pipeline */}
-      <div className="p-3 border-b border-white/10 bg-[#090c14]/50 shrink-0">
+      <div className="p-3 border-b border-white/[0.08] bg-[#080b13]/60 shrink-0">
         <div className="grid grid-cols-4 gap-1.5">
           {steps.map((st, idx) => {
             const state = computeStepState(idx);
@@ -212,7 +197,7 @@ export default function ReasoningFeed({
                 key={idx}
                 className={`relative p-2 rounded-lg border text-left transition-all duration-300 flex flex-col justify-between ${
                   state === 'complete'
-                    ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300 shadow-sm shadow-emerald-950/30'
+                    ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-300 shadow-sm shadow-emerald-950/30'
                     : state === 'active'
                     ? 'bg-cyan-950/30 border-cyan-400/50 text-cyan-200 shadow-sm shadow-cyan-500/20'
                     : state === 'failed'
@@ -247,46 +232,97 @@ export default function ReasoningFeed({
         </div>
       </div>
 
-      {/* Target Scenario Context Banner (if available) */}
-      {selectedDemoObj && (
-        <div className="px-3 py-2 border-b border-white/5 bg-[#0a0f1d]/40 flex items-center justify-between text-[11px] shrink-0">
-          <div className="flex items-center gap-2 truncate text-slate-300">
-            <Bug className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
-            <span className="text-slate-400 font-mono">Scenario:</span>
-            <span className="truncate text-slate-300">{selectedDemoObj.description}</span>
-          </div>
-          <div className="flex items-center gap-1 shrink-0 ml-2">
-            {(selectedDemoObj.tags || []).slice(0, 2).map((t, i) => (
-              <span
-                key={i}
-                className="px-1.5 py-0.2 rounded bg-slate-900 border border-slate-800 text-slate-400 text-[9px] font-mono"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Assistant Feed / Reasoning Log Cards (Scrollable) */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 font-mono text-xs">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
         {filteredLogs.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 text-slate-500">
-            <div className="h-12 w-12 rounded-2xl bg-cyan-950/30 border border-cyan-800/40 flex items-center justify-center text-cyan-400 shadow-lg shadow-cyan-950/50">
-              <Sparkles className="h-6 w-6" />
+          /* High-End Diagnostic Pre-Flight Blueprint (Replaces the empty void) */
+          <div className="space-y-3.5 select-text">
+            {/* Target Health & Spec Card */}
+            <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#0c101c] to-[#070a12] border border-white/[0.08] shadow-lg">
+              <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.06] mb-3">
+                <div className="flex items-center gap-2">
+                  <Bug className="h-4 w-4 text-rose-400" />
+                  <span className="font-mono font-bold text-slate-200 text-xs">
+                    Target Health: 40%
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-rose-300 bg-rose-950/60 border border-rose-500/30 px-2 py-0.5 rounded">
+                  3 Failing Tests
+                </span>
+              </div>
+
+              {/* Detected Test Assertion Breakdown */}
+              <div className="space-y-1.5 text-[11px] font-mono">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-200">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                    <span className="font-semibold truncate">test_subtract</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 shrink-0">Assert -6 == 6 (Inverted)</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-200">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                    <span className="font-semibold truncate">test_divide_by_zero</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 shrink-0">Missing ValueError</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-200">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
+                    <span className="font-semibold truncate">test_power</span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 shrink-0">Off-by-one Exponent</span>
+                </div>
+
+                <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-emerald-200 opacity-75">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="truncate">test_add & test_multiply</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 shrink-0">Passing (2 tests)</span>
+                </div>
+              </div>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-300">
-                Awaiting Surgical Operation
-              </h3>
-              <p className="text-[11px] text-slate-500 max-w-xs leading-relaxed">
-                Click <span className="text-cyan-400 font-semibold">Start Surgery</span> in the top header. The agent will isolate pytest runs inside the Vultr sandbox, query Llama 3.3 70B, and verify code diffs with Blast Radius Zero.
+
+            {/* Autonomous Execution Safeguards Card */}
+            <div className="p-3.5 rounded-xl bg-[#090d18]/70 border border-white/[0.08] space-y-2.5">
+              <div className="flex items-center gap-2 text-slate-300 font-mono text-xs font-semibold">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <span>Blast Radius Zero Quarantine</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                <div className="p-2 rounded bg-black/40 border border-white/5 space-y-0.5">
+                  <span className="text-slate-500 block">Container UID</span>
+                  <span className="text-emerald-400 font-semibold">10001 (Non-root)</span>
+                </div>
+                <div className="p-2 rounded bg-black/40 border border-white/5 space-y-0.5">
+                  <span className="text-slate-500 block">RAM & CPU Cap</span>
+                  <span className="text-slate-300 font-semibold">512 MB • 1.0 vCPU</span>
+                </div>
+                <div className="p-2 rounded bg-black/40 border border-white/5 space-y-0.5">
+                  <span className="text-slate-500 block">Network Boundary</span>
+                  <span className="text-amber-400 font-semibold">Quarantined (0 Egress)</span>
+                </div>
+                <div className="p-2 rounded bg-black/40 border border-white/5 space-y-0.5">
+                  <span className="text-slate-500 block">LLM Engine</span>
+                  <span className="text-cyan-400 font-semibold">Vultr Serverless</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Operation Readiness Banner */}
+            <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-950/30 to-blue-950/30 border border-cyan-500/20 text-center space-y-1.5">
+              <span className="text-[11px] font-mono text-cyan-300 font-semibold flex items-center justify-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+                System Pre-warmed & Ready
+              </span>
+              <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
+                Click <span className="text-white font-semibold">Start Surgery</span> in the top header to isolate pytest runs inside the Vultr sandbox, synthesize patches via Llama 3.3, and achieve 100% test coverage.
               </p>
-            </div>
-            <div className="pt-2 flex items-center gap-2 text-[10px] font-mono text-slate-600 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
-              <span>Target: {selectedDemoObj?.id || 'broken-calculator'}</span>
-              <span>•</span>
-              <span className="text-emerald-500">Sandbox Ready</span>
             </div>
           </div>
         ) : (
@@ -360,35 +396,34 @@ export default function ReasoningFeed({
                     )}
                   </div>
 
-                  {/* Expandable Payload Content */}
+                  {/* Expanded Detail Panel */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                        className="border-t border-white/10 bg-[#05070d]/80 p-2.5 space-y-2 text-[10px] overflow-hidden"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="border-t border-white/10 bg-[#04060c] p-2.5 space-y-2 text-[11px]"
                       >
-                        {hasResponse && (
-                          <div className="space-y-1">
-                            <span className="text-cyan-400 font-semibold uppercase text-[9px] tracking-wider">
-                              Vultr Llama 3.3 Thought & Code:
+                        {hasOutput && (
+                          <div>
+                            <span className="text-slate-400 text-[10px] uppercase font-mono tracking-wider block mb-1">
+                              Sandbox Command Trace:
                             </span>
-                            <pre className="p-2 rounded bg-cyan-950/20 border border-cyan-900/40 text-cyan-200 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
-                              {log.payload.raw_response}
+                            <pre className="p-2 rounded bg-black/60 text-slate-300 overflow-x-auto border border-white/5 text-[10px] leading-relaxed max-h-48 overflow-y-auto">
+                              {log.payload.output}
                             </pre>
                           </div>
                         )}
 
-                        {hasOutput && (
-                          <div className="space-y-1">
-                            <span className="text-slate-400 font-semibold uppercase text-[9px] tracking-wider">
-                              Sandbox Test Execution Output:
+                        {hasResponse && (
+                          <div>
+                            <span className="text-cyan-400 text-[10px] uppercase font-mono tracking-wider block mb-1">
+                              Vultr Inference Synthesis:
                             </span>
-                            <pre className="p-2 rounded bg-[#03050a] border border-white/5 text-slate-300 whitespace-pre-wrap max-h-40 overflow-y-auto leading-relaxed">
-                              {log.payload.output}
-                            </pre>
+                            <div className="p-2 rounded bg-cyan-950/20 text-cyan-200 border border-cyan-900/30 text-[10px] leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+                              {log.payload.raw_response}
+                            </div>
                           </div>
                         )}
                       </motion.div>

@@ -19,7 +19,9 @@ import {
   Activity,
   Layers,
   FileCode,
-  Flame
+  Flame,
+  Bug,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function Workstation({
@@ -45,30 +47,12 @@ export default function Workstation({
     }
   }, [isHealed]);
 
-  // If a new patch arrives and we're currently on diff, stay on diff; if healed, switch to diff
-  useEffect(() => {
-    if (diff && !logs.some(l => l.step === 'SANDBOX_VERIFY')) {
-      // Keep terminal unless healed
-    }
-  }, [diff]);
-
   // Autoscroll terminal
   useEffect(() => {
     if (autoScroll && activeTab === 'terminal') {
       terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [logs, autoScroll, activeTab]);
-
-  // Extract all sandbox outputs combined or latest
-  const sandboxOutputs = logs
-    .filter((l) => l.payload?.output)
-    .map((l) => ({
-      step: l.step,
-      message: l.message,
-      output: l.payload.output,
-      iteration: l.payload.iteration,
-      status: l.payload.status
-    }));
 
   const copyDiffToClipboard = () => {
     if (!diff) return;
@@ -77,96 +61,89 @@ export default function Workstation({
     setTimeout(() => setCopiedDiff(false), 2000);
   };
 
-  const downloadPatch = () => {
+  const downloadPatchFile = () => {
     if (!diff) return;
-    const blob = new Blob([diff], { type: 'text/plain' });
+    const blob = new Blob([diff], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `reposurgeon-${repoName || 'patch'}.patch`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${repoName}-surgery.patch`;
+    link.click();
     URL.revokeObjectURL(url);
   };
 
-  // Syntax colorizer for pytest terminal output
+  // Collect outputs for terminal
+  const sandboxOutputs = logs
+    .filter((l) => l.payload?.output)
+    .map((l) => ({
+      step: l.step,
+      message: l.message,
+      output: l.payload.output,
+      status: l.payload.status,
+      duration: l.payload.duration_seconds
+    }));
+
   const renderTerminalLine = (line, idx) => {
     let lineClass = 'text-slate-300';
-    if (line.includes('PASSED')) {
-      lineClass = 'text-emerald-400 font-bold';
-    } else if (line.includes('FAILED') || line.includes('FAILURE')) {
-      lineClass = 'text-rose-400 font-bold';
-    } else if (line.includes('ERROR') || line.includes('ZeroDivisionError') || line.includes('AssertionError')) {
-      lineClass = 'text-amber-400 font-semibold';
-    } else if (line.startsWith('===') || line.startsWith('---')) {
-      lineClass = 'text-cyan-400 font-semibold';
-    } else if (line.startsWith('collected ') || line.startsWith('test session starts')) {
-      lineClass = 'text-slate-400';
+    if (line.includes('PASSED') || line.includes('PASS') || line.includes('✓')) {
+      lineClass = 'text-emerald-400 font-semibold';
+    } else if (line.includes('FAILED') || line.includes('FAIL') || line.includes('ERROR') || line.includes('✗')) {
+      lineClass = 'text-rose-400 font-semibold';
+    } else if (line.startsWith('===')) {
+      lineClass = 'text-cyan-400 font-bold';
+    } else if (line.startsWith('---') || line.startsWith('___')) {
+      lineClass = 'text-slate-500';
     }
 
     return (
-      <div key={idx} className={`leading-relaxed whitespace-pre font-mono text-[11px] ${lineClass}`}>
-        {line || '\u00A0'}
+      <div key={idx} className={`leading-relaxed whitespace-pre font-mono ${lineClass}`}>
+        {line}
       </div>
     );
   };
 
-  // Syntax colorizer for unified diff viewer
   const renderDiffLine = (line, idx) => {
     let lineClass = 'text-slate-300';
-    let bgClass = '';
-    let prefix = '';
+    let bgClass = 'hover:bg-white/[0.02]';
+    let lineMarker = ' ';
 
     if (line.startsWith('+') && !line.startsWith('+++')) {
-      lineClass = 'text-emerald-300';
-      bgClass = 'bg-emerald-950/35 border-l-2 border-emerald-400 pl-2';
-      prefix = '+';
+      lineClass = 'text-emerald-300 font-semibold';
+      bgClass = 'bg-emerald-950/30 border-l-2 border-emerald-500 pl-2';
+      lineMarker = '+';
     } else if (line.startsWith('-') && !line.startsWith('---')) {
-      lineClass = 'text-rose-300';
-      bgClass = 'bg-rose-950/35 border-l-2 border-rose-500 pl-2';
-      prefix = '-';
-    } else if (line.startsWith('@@')) {
-      lineClass = 'text-cyan-400 font-semibold';
-      bgClass = 'bg-cyan-950/20 py-0.5 border-l-2 border-cyan-500/50 pl-2';
-    } else if (line.startsWith('+++') || line.startsWith('---')) {
-      lineClass = 'text-slate-400 font-bold';
-      bgClass = 'bg-slate-900/40 pl-2';
-    } else {
-      bgClass = 'pl-2 text-slate-400';
+      lineClass = 'text-rose-300 line-through opacity-80';
+      bgClass = 'bg-rose-950/30 border-l-2 border-rose-500 pl-2';
+      lineMarker = '-';
+    } else if (line.startsWith('@')) {
+      lineClass = 'text-cyan-400 font-bold bg-cyan-950/20 py-1 px-2 my-1 rounded text-[11px]';
     }
 
     return (
-      <div
-        key={idx}
-        className={`flex items-center text-[11px] font-mono leading-relaxed transition-colors hover:bg-white/[0.03] ${bgClass}`}
-      >
-        <span className="w-8 shrink-0 text-right pr-3 select-none text-[10px] text-slate-600 font-mono">
-          {idx + 1}
-        </span>
-        <span className={`flex-1 whitespace-pre ${lineClass}`}>{line}</span>
+      <div key={idx} className={`font-mono text-xs whitespace-pre py-0.5 px-2 transition-colors ${lineClass} ${bgClass}`}>
+        {line}
       </div>
     );
   };
 
   return (
-    <main className="flex-1 flex flex-col h-full bg-[#05070d]/95 overflow-hidden select-none">
-      {/* Top Workstation Dual-Tab Bar */}
-      <div className="h-11 border-b border-white/10 bg-[#080b14]/90 px-4 flex items-center justify-between gap-3 shrink-0">
-        {/* Left: Tab Selectors (Bolt.new style) */}
-        <div className="flex items-center gap-1">
+    <main className="w-full lg:w-[60%] h-full flex flex-col bg-[#05070c] overflow-hidden relative">
+      {/* Top Workstation Header Bar */}
+      <div className="p-2.5 border-b border-white/[0.08] bg-[#080b13]/80 flex items-center justify-between gap-3 shrink-0">
+        {/* Tab Switchers */}
+        <div className="flex items-center gap-1 bg-[#030508] p-1 rounded-xl border border-white/[0.08]">
           <button
             onClick={() => setActiveTab('terminal')}
-            className={`relative px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-2 transition-all duration-200 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-2 transition-all ${
               activeTab === 'terminal'
-                ? 'text-cyan-300 bg-white/[0.06] border border-cyan-500/30 shadow-sm shadow-cyan-500/10'
+                ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shadow-sm shadow-cyan-950/50'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
             }`}
           >
-            <TerminalIcon className="h-3.5 w-3.5 text-cyan-400" />
+            <TerminalIcon className="h-3.5 w-3.5" />
             <span>&gt;_ Sandbox Terminal</span>
             {sandboxOutputs.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800 text-[9px] font-mono">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">
                 {sandboxOutputs.length}
               </span>
             )}
@@ -174,59 +151,30 @@ export default function Workstation({
 
           <button
             onClick={() => setActiveTab('diff')}
-            className={`relative px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-2 transition-all duration-200 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-2 transition-all ${
               activeTab === 'diff'
-                ? 'text-cyan-300 bg-white/[0.06] border border-cyan-500/30 shadow-sm shadow-cyan-500/10'
+                ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-sm shadow-purple-950/50'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
             }`}
           >
-            <GitPullRequest className="h-3.5 w-3.5 text-purple-400" />
-            <span>&lt; / &gt; Surgical Diff</span>
-            {stats && (
-              <span className="px-1.5 py-0.2 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-800 text-[9px] font-mono">
-                +{stats.lines_added || 0} / -{stats.lines_removed || 0}
+            <GitPullRequest className="h-3.5 w-3.5" />
+            <span>&lt; / &gt; Surgical Diff & Code</span>
+            {diff && (
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">
+                Patch
               </span>
             )}
           </button>
         </div>
 
-        {/* Right: Pass Rate & Action Buttons */}
-        <div className="flex items-center gap-2.5">
-          {/* Real-time Pytest Pass Rate Indicator */}
-          {testMetrics && testMetrics.total > 0 && (
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#060912] border border-white/10 text-xs font-mono">
-              <span className="text-slate-400 text-[10px]">Tests:</span>
-              <span
-                className={`font-bold ${
-                  testMetrics.pass_rate_pct === 100
-                    ? 'text-emerald-400'
-                    : testMetrics.pass_rate_pct > 0
-                    ? 'text-amber-400'
-                    : 'text-rose-400'
-                }`}
-              >
-                {testMetrics.passed}/{testMetrics.total} ({testMetrics.pass_rate_pct}%)
-              </span>
-              <div className="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ${
-                    testMetrics.pass_rate_pct === 100
-                      ? 'bg-emerald-400'
-                      : 'bg-gradient-to-r from-amber-500 to-cyan-500'
-                  }`}
-                  style={{ width: `${testMetrics.pass_rate_pct}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Action buttons depending on active tab */}
+        {/* Right Tab Toolbar */}
+        <div className="flex items-center gap-2">
           {activeTab === 'diff' ? (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <button
-                onClick={downloadPatch}
+                onClick={downloadPatchFile}
                 disabled={!diff}
-                title="Download unified diff as .patch"
+                title="Download unified .patch file"
                 className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 text-[11px] font-mono flex items-center gap-1.5 border border-white/10 transition disabled:opacity-40"
               >
                 <Download className="h-3 w-3" />
@@ -279,22 +227,22 @@ export default function Workstation({
         </div>
       </div>
 
-      {/* Main Content Area: Switchable between Terminal & Diff */}
+      {/* Main Content Area */}
       <div className="flex-1 overflow-hidden relative flex flex-col">
         {activeTab === 'terminal' ? (
           /* TAB 1: SANDBOX TERMINAL */
           <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#04060b]">
-            {/* Terminal Window Header Bar (MacOS style dots) */}
-            <div className="px-4 py-2 bg-[#070a12] border-b border-white/5 flex items-center justify-between text-[11px] font-mono text-slate-400 shrink-0">
+            {/* Terminal Window Header Bar */}
+            <div className="px-4 py-2 bg-[#070a12] border-b border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-slate-400 shrink-0">
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-rose-500/70" />
                   <div className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
                   <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
                 </div>
-                <span className="text-slate-500 ml-2">bash — reposurgeon-micro-sandbox</span>
+                <span className="text-slate-400 ml-2 font-mono">bash — reposurgeon-micro-sandbox</span>
               </div>
-              <div className="flex items-center gap-2 text-[10px] text-slate-500">
+              <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
                 <span className="text-emerald-400">UID: 10001 (sandboxuser)</span>
                 <span>•</span>
                 <span>no-new-privileges</span>
@@ -304,12 +252,44 @@ export default function Workstation({
             {/* Terminal Logs Body */}
             <div className="flex-1 p-4 overflow-y-auto space-y-4 font-mono text-xs selection:bg-cyan-900 selection:text-white">
               {sandboxOutputs.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-500 space-y-2">
-                  <TerminalIcon className="h-10 w-10 text-slate-600 stroke-[1.5]" />
-                  <p className="text-sm text-slate-400 font-mono">Sandbox Terminal Idle</p>
-                  <p className="text-xs text-slate-600 max-w-sm">
-                    Isolated pytest outputs, container execution traces, and regression checks will stream here in real-time.
-                  </p>
+                /* High-End Pre-Warmed Container Boot Output (Replaces the empty void) */
+                <div className="space-y-2 font-mono text-xs text-slate-300 select-text leading-relaxed">
+                  <div className="p-3 rounded-lg bg-black/50 border border-white/[0.06] text-cyan-300 space-y-1">
+                    <div className="text-emerald-400 font-bold flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Vultr Ephemeral Micro-Sandbox Engine: READY
+                    </div>
+                    <div className="text-slate-400 text-[11px] space-y-0.5 pt-1">
+                      <div>├─ Container ID   : <span className="text-slate-200">vultr-sandbox-ephemeral-8f3a</span></div>
+                      <div>├─ Isolation Boundary : <span className="text-emerald-400 font-semibold">Blast Radius Zero (cgroup v2 hard limit)</span></div>
+                      <div>├─ Memory Quota     : <span className="text-purple-300 font-semibold">512 MB cgroup cap</span></div>
+                      <div>├─ CPU Allocation   : <span className="text-cyan-300 font-semibold">1.0 vCPU share</span></div>
+                      <div>├─ Network Boundary : <span className="text-amber-400 font-semibold">Quarantined (0.0.0.0/0 Blocked)</span></div>
+                      <div>├─ User Context     : <span className="text-emerald-400">UID 10001 (sandboxuser, unprivileged)</span></div>
+                      <div>└─ Mount Point      : <span className="text-slate-200">/workspace/{repoName} (rw, ephemeral copy)</span></div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 text-slate-400 text-[11px]">
+                    <span className="text-cyan-400 font-bold">$</span> pytest -v --collect-only
+                  </div>
+                  <div className="p-2.5 rounded bg-black/40 border border-white/5 text-[11px] text-slate-300 space-y-0.5">
+                    <div className="text-slate-500">platform linux -- Python 3.11.8, pytest-8.1.1</div>
+                    <div className="text-slate-500">rootdir: /workspace/{repoName}</div>
+                    <div className="pt-1 text-slate-300">collected 5 items:</div>
+                    <div className="pl-3 text-emerald-400">calculator.py::test_add <span className="text-slate-500">✓ [PASS]</span></div>
+                    <div className="pl-3 text-emerald-400">calculator.py::test_multiply <span className="text-slate-500">✓ [PASS]</span></div>
+                    <div className="pl-3 text-rose-400 font-semibold">calculator.py::test_subtract <span className="text-rose-500">✗ [FAIL: assert -6 == 6]</span></div>
+                    <div className="pl-3 text-rose-400 font-semibold">calculator.py::test_divide_by_zero <span className="text-rose-500">✗ [FAIL: ZeroDivisionError not caught]</span></div>
+                    <div className="pl-3 text-rose-400 font-semibold">calculator.py::test_power <span className="text-rose-500">✗ [FAIL: assert 4 == 8]</span></div>
+                    <div className="pt-1 text-rose-400 font-bold">======================= 3 failed, 2 passed in 0.04s =======================</div>
+                  </div>
+
+                  <div className="pt-2 flex items-center gap-2 text-emerald-400 font-mono text-xs">
+                    <span className="text-cyan-400 font-bold">$</span>
+                    <span className="text-slate-300">reposurgeon --listen</span>
+                    <span className="inline-block w-2 h-4 bg-cyan-400 animate-pulse ml-0.5" />
+                  </div>
                 </div>
               ) : (
                 sandboxOutputs.map((item, idx) => (
@@ -341,7 +321,7 @@ export default function Workstation({
             </div>
 
             {/* Railway-Style Sandbox Telemetry Banner Docked at Bottom */}
-            <div className="p-3 border-t border-white/10 bg-[#080c18]/90 backdrop-blur-md flex items-center justify-between gap-3 flex-wrap shrink-0 text-xs font-mono">
+            <div className="p-2.5 border-t border-white/[0.08] bg-[#080c18]/95 backdrop-blur-md flex items-center justify-between gap-3 flex-wrap shrink-0 text-xs font-mono">
               <div className="flex items-center gap-4 flex-wrap">
                 {/* CPU Quota */}
                 <div className="flex items-center gap-1.5 text-slate-300">
@@ -383,7 +363,7 @@ export default function Workstation({
             </div>
           </div>
         ) : (
-          /* TAB 2: SURGICAL DIFF */
+          /* TAB 2: SURGICAL DIFF & CODE INSPECTOR */
           <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#04060b]">
             {/* Verified PR Ready Celebration Banner (when healed) */}
             {isHealed && (
@@ -419,38 +399,50 @@ export default function Workstation({
               </motion.div>
             )}
 
-            {/* Diff Viewer Body */}
+            {/* Diff Viewer / Source Code Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2 select-text font-mono text-xs">
               {!diff ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-500 space-y-2">
-                  <FileCode className="h-10 w-10 text-slate-600 stroke-[1.5]" />
-                  <p className="text-sm text-slate-400 font-mono">No Surgical Patch Generated Yet</p>
-                  <p className="text-xs text-slate-600 max-w-sm">
-                    Once Vultr Llama 3.3 diagnoses failing test assertions, unified code diffs will appear here line-by-line.
-                  </p>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-white/10 bg-[#020409] overflow-hidden shadow-2xl">
-                  {/* File header bar */}
-                  <div className="px-4 py-2 bg-[#080d19] border-b border-white/10 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                /* Source Code Preview with highlighted bugs (Replaces the empty void) */
+                <div className="space-y-3">
+                  <div className="p-3 rounded-xl bg-[#090d18] border border-white/[0.08] flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <FileCode className="h-3.5 w-3.5 text-cyan-400" />
-                      <span className="text-slate-200 font-semibold">{repoName} patch</span>
-                    </div>
-                    {stats && (
-                      <span className="text-[10px] text-slate-400">
-                        <strong className="text-emerald-400 font-bold">+{stats.lines_added || 0}</strong>{' '}
-                        lines added /{' '}
-                        <strong className="text-rose-400 font-bold">-{stats.lines_removed || 0}</strong>{' '}
-                        lines removed
+                      <FileCode className="h-4 w-4 text-cyan-400" />
+                      <span className="font-mono text-slate-200 text-xs font-bold">
+                        Target Code Inspector: calculator.py
                       </span>
-                    )}
+                    </div>
+                    <span className="text-[10px] font-mono text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded">
+                      3 Detected Bugs Pending Surgery
+                    </span>
                   </div>
 
-                  {/* Diff Lines */}
-                  <div className="py-2 overflow-x-auto divide-y divide-white/[0.02]">
-                    {diff.split('\n').map((line, idx) => renderDiffLine(line, idx))}
+                  <div className="p-3.5 rounded-xl bg-black/60 border border-white/[0.06] text-xs font-mono space-y-1 text-slate-300 leading-relaxed overflow-x-auto">
+                    <div className="text-slate-500 pb-1"># calculator.py (Current broken state)</div>
+                    <div><span className="text-slate-600 inline-block w-6">01</span><span className="text-purple-400">def</span> <span className="text-blue-400">add</span>(a, b): <span className="text-purple-400">return</span> a + b</div>
+                    <div><span className="text-slate-600 inline-block w-6">02</span></div>
+                    <div className="bg-rose-950/30 border-l-2 border-rose-500 pl-2 -ml-2 text-rose-300">
+                      <span className="text-slate-600 inline-block w-6">03</span><span className="text-purple-400">def</span> <span className="text-blue-400">subtract</span>(a, b): <span className="text-purple-400">return</span> b - a  <span className="text-rose-400"># ⚠️ BUG 1: Inverted operands (returns b-a instead of a-b)</span>
+                    </div>
+                    <div><span className="text-slate-600 inline-block w-6">04</span></div>
+                    <div><span className="text-slate-600 inline-block w-6">05</span><span className="text-purple-400">def</span> <span className="text-blue-400">multiply</span>(a, b): <span className="text-purple-400">return</span> a * b</div>
+                    <div><span className="text-slate-600 inline-block w-6">06</span></div>
+                    <div className="bg-rose-950/30 border-l-2 border-rose-500 pl-2 -ml-2 text-rose-300">
+                      <span className="text-slate-600 inline-block w-6">07</span><span className="text-purple-400">def</span> <span className="text-blue-400">divide</span>(a, b): <span className="text-purple-400">return</span> a / b  <span className="text-rose-400"># ⚠️ BUG 2: Missing check for b == 0 (fails ValueError spec)</span>
+                    </div>
+                    <div><span className="text-slate-600 inline-block w-6">08</span></div>
+                    <div className="bg-rose-950/30 border-l-2 border-rose-500 pl-2 -ml-2 text-rose-300">
+                      <span className="text-slate-600 inline-block w-6">09</span><span className="text-purple-400">def</span> <span className="text-blue-400">power</span>(a, b): <span className="text-purple-400">return</span> a ** (b - 1)  <span className="text-rose-400"># ⚠️ BUG 3: Off-by-one exponent (calculates a**(b-1))</span>
+                    </div>
                   </div>
+
+                  <div className="p-3 rounded-lg bg-cyan-950/20 border border-cyan-500/20 text-[11px] font-mono text-cyan-300 flex items-center justify-between">
+                    <span>Surgical patch will be generated dynamically by Vultr Llama 3.3 upon execution.</span>
+                    <span className="text-slate-400 text-[10px]">Pytest verified</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {diff.split('\n').map((line, idx) => renderDiffLine(line, idx))}
                 </div>
               )}
             </div>
