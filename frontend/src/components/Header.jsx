@@ -35,7 +35,7 @@ export default function Header({
   const isRunning = status === 'running';
 
   return (
-    <header className="relative z-30 h-14 border-b border-white/[0.08] bg-[#070a14]/80 backdrop-blur-xl px-4 flex items-center justify-between gap-3 shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
+    <header className="sticky top-0 z-50 w-full h-14 border-b border-white/[0.08] bg-[#070a14]/95 backdrop-blur-xl px-4 flex items-center justify-between gap-3 shrink-0 shadow-[0_4px_30px_rgba(0,0,0,0.4)]">
       {/* Left: Brand Identity */}
       <div className="flex items-center gap-3 shrink-0">
         <div className="relative group cursor-pointer">

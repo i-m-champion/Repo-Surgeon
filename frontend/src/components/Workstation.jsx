@@ -38,7 +38,7 @@ export default function Workstation({
   const [activeTab, setActiveTab] = useState('terminal'); // 'terminal' | 'diff' | 'topology'
   const [autoScroll, setAutoScroll] = useState(true);
   const [copiedDiff, setCopiedDiff] = useState(false);
-  const terminalEndRef = useRef(null);
+  const terminalContainerRef = useRef(null);
 
   // Automatically switch to diff tab when repo is healed
   useEffect(() => {
@@ -47,10 +47,10 @@ export default function Workstation({
     }
   }, [isHealed]);
 
-  // Autoscroll terminal
+  // Autoscroll terminal container without scrolling window
   useEffect(() => {
-    if (autoScroll && activeTab === 'terminal') {
-      terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (autoScroll && activeTab === 'terminal' && terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTop = terminalContainerRef.current.scrollHeight;
     }
   }, [logs, autoScroll, activeTab]);
 
@@ -349,7 +349,7 @@ export default function Workstation({
               </div>
 
               {/* Terminal Output Stream */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-4 font-mono text-xs selection:bg-cyan-900 selection:text-white">
+              <div ref={terminalContainerRef} className="flex-1 p-4 overflow-y-auto space-y-4 font-mono text-xs selection:bg-cyan-900 selection:text-white">
                 {sandboxOutputs.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-500 space-y-2.5">
                     <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
@@ -386,7 +386,6 @@ export default function Workstation({
                     </div>
                   ))
                 )}
-                <div ref={terminalEndRef} />
               </div>
 
               {/* Railway-Style Sandbox Telemetry HUD Banner Docked at Bottom */}

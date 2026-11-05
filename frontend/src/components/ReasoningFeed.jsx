@@ -30,10 +30,12 @@ export default function ReasoningFeed({
   const [filter, setFilter] = useState('ALL'); // ALL, AI, SANDBOX
   const [expandedLogIdx, setExpandedLogIdx] = useState(null);
   const [copiedIdx, setCopiedIdx] = useState(null);
-  const feedEndRef = useRef(null);
+  const feedContainerRef = useRef(null);
 
   useEffect(() => {
-    feedEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (feedContainerRef.current) {
+      feedContainerRef.current.scrollTop = feedContainerRef.current.scrollHeight;
+    }
   }, [logs]);
 
   // Determine stage progress for the visual stepper
@@ -292,7 +294,7 @@ export default function ReasoningFeed({
       )}
 
       {/* Assistant Feed Stream Cards (Bolt.new Style) */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 font-mono text-xs">
+      <div ref={feedContainerRef} className="flex-1 overflow-y-auto p-3 space-y-2.5 font-mono text-xs">
         {filteredLogs.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3.5 text-slate-500">
             <div className="relative">
@@ -456,7 +458,6 @@ export default function ReasoningFeed({
             })}
           </AnimatePresence>
         )}
-        <div ref={feedEndRef} />
       </div>
     </aside>
   );

@@ -39,10 +39,9 @@ export default function App() {
   }, []);
 
   // Resolve API Base
-  const apiBase =
-    window.location.port === '3000'
-      ? ''
-      : `http://${window.location.hostname}:8001`;
+  const isDev =
+    window.location.port === '5173' || window.location.port === '3000';
+  const apiBase = isDev ? '' : `http://${window.location.hostname}:8001`;
 
   useEffect(() => {
     // Fetch available demo repositories from backend
@@ -84,10 +83,7 @@ export default function App() {
 
     // Establish WebSocket connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost =
-      window.location.port === '3000'
-        ? window.location.host
-        : `${window.location.hostname}:8001`;
+    const wsHost = isDev ? window.location.host : `${window.location.hostname}:8001`;
     const wsUrl = `${protocol}//${wsHost}/ws/heal`;
     const ws = new WebSocket(wsUrl);
 
