@@ -21,8 +21,9 @@ DIAGNOSIS_USER_PROMPT = """We ran the test suite in our isolated Vultr sandbox a
 Please analyze the failure stack traces, identify the root cause, and output the corrected version of `{file_name}` enclosed in a ```python code block.
 """
 
-MULTI_TURN_RETRY_PROMPT = """Iteration {iteration} repair:
-The previous patch was tested inside our isolated Vultr micro-sandbox, but the following test failures still persist:
+REFLECTION_USER_PROMPT = """[AUTONOMOUS REFLECTION - TURN {turn}]
+Your previous patch (Turn {prev_turn}) was verified in our isolated Vultr micro-sandbox.
+Some tests passed, but the following errors still persist:
 
 --- REMAINING TEST RUNNER FAILURES ---
 {test_output}
@@ -32,5 +33,8 @@ The previous patch was tested inside our isolated Vultr micro-sandbox, but the f
 {file_content}
 ------------------------------------------
 
-Analyze why these specific assertions are still failing. Provide the refined, complete version of `{file_name}` enclosed in a ```python code block to make the test suite 100% green.
+REFLECTION & SELF-CORRECTION TASK:
+1. Reflect on why the previous patch failed these specific assertions.
+2. Identify the remaining edge-cases (e.g. regex boundary, off-by-one, missing checks).
+3. Synthesize your revised hypothesis and output the refined, complete version of `{file_name}` enclosed in a ```python code block to turn all tests green.
 """

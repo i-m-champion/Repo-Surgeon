@@ -135,7 +135,7 @@ export default function App() {
           setPrData(data.payload.pr_metadata);
         }
 
-        if (data.step === 'HEALED') {
+        if (data.step === 'HEALED' || data.step === 'VERIFIED_GREEN') {
           setStatus('healed');
           setIsHealed(true);
         } else if (data.step === 'ERROR') {

@@ -1,41 +1,39 @@
 """
-Auth & Input Sanitizer Module with intentional security/logic bugs for RepoSurgeon to heal.
+Auth & Input Sanitizer Module with intentional security/regex bugs for RepoSurgeon to diagnose and heal.
 """
 import re
-import hashlib
+
+def sanitize_input(user_input: str) -> str:
+    """
+    Remove potentially dangerous HTML/script tags from user input to prevent XSS.
+    (BUG: Incomplete replacement leaves closing tags, uppercase tags, and attributes intact)
+    """
+    if not user_input:
+        return ""
+    # BUG: only replaces exact lowercase "<script>" string
+    return user_input.replace("<script>", "")
+
+def mask_credit_card(card_number: str) -> str:
+    """
+    Mask all digits of a credit card except the last 4 digits.
+    Example: '4532-1234-5678-9010' -> '****-****-****-9010'
+    (BUG: Off-by-one exposing 5 digits instead of 4)
+    """
+    if not card_number:
+        return ""
+    digits_only = re.sub(r"\D", "", card_number)
+    if len(digits_only) < 4:
+        return card_number
+    # BUG: off-by-one slice error exposing 5 digits
+    masked_digits = "*" * (len(digits_only) - 5) + digits_only[-5:]
+    return "-".join([masked_digits[i:i+4] for i in range(0, len(masked_digits), 4)])
 
 def sanitize_username(username: str) -> str:
     """
-    Sanitize username: allow only alphanumeric and underscores.
-    (BUG: fails when username is empty string)
+    Allow only alphanumeric characters and underscores in usernames.
+    (BUG: Strips underscores and crashes if username is None)
     """
     if username is None:
-        return ""
-    return re.sub(r"[^\w]", "", username)
-
-def validate_password_strength(password: str) -> bool:
-    """
-    Password must be at least 8 chars, contain at least 1 digit and 1 uppercase letter.
-    (BUG: requires len < 12 instead of 8, rejecting valid 8-11 character passwords)
-    """
-    if len(password) < 12:
-        return False
-    has_digit = any(c.isdigit() for c in password)
-    has_upper = any(c.isupper() for c in password)
-    return has_digit and has_upper
-
-def hash_secret_token(token: str, salt: str = "vultr_salt") -> str:
-    """
-    Hash a secret token using sha256 with salt.
-    (BUG: does not validate empty token to raise ValueError("Token cannot be empty"))
-    """
-    return hashlib.sha256(f"{salt}:{token}".encode("utf-8")).hexdigest()
-
-def escape_sql_fragment(value: str) -> str:
-    """
-    Escape single quotes and SQL comment delimiters to prevent SQL injection.
-    (BUG: leaves SQL comment delimiter '--' intact and does not double quotes)
-    """
-    if not isinstance(value, str):
-        return ""
-    return value.replace("'", "\\'")
+        raise ValueError("Username cannot be None")
+    # BUG: Strips valid underscores
+    return re.sub(r"[^a-zA-Z0-9]", "", username)

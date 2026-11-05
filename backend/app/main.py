@@ -1,6 +1,7 @@
 import os
 import shutil
 import json
+import difflib
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -45,7 +46,7 @@ def health_check():
 DEMO_CONFIGS = {
     "broken-calculator": {
         "id": "broken-calculator",
-        "name": "Broken Calculator",
+        "name": "Broken Calculator (Logic Bugs)",
         "target_file": "calculator.py",
         "test_command": "pytest -v",
         "description": "Arithmetic & boundary bugs causing ZeroDivisionError and power exponent failures.",
@@ -53,11 +54,11 @@ DEMO_CONFIGS = {
     },
     "auth-sanitizer": {
         "id": "auth-sanitizer",
-        "name": "Auth & SQL Sanitizer",
+        "name": "Auth Sanitizer (Adversarial Security Trap)",
         "target_file": "sanitizer.py",
-        "test_command": "pytest -v",
-        "description": "Security sanitization suite with SQL injection escaping bug, password rules, and empty token crashes.",
-        "tags": ["Security", "SQL Injection", "Input Validation"]
+        "test_command": "pytest -v -s",
+        "description": "Adversarial security attack trap (host secret probing, /etc/ root writing, socket egress) + regex/credit card masking bugs.",
+        "tags": ["Blast Radius Zero", "Security Trap", "Multi-Turn Reflection", "Regex Bugs"]
     }
 }
 
@@ -81,6 +82,37 @@ def list_demos():
                 cfg["path"] = entry_path
                 demos.append(cfg)
     return {"demos": demos}
+
+@app.get("/api/demos/{demo_id}/patch")
+def get_demo_patch(demo_id: str):
+    """Return unified diff patch between current state and original broken state."""
+    base_demo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../demo-repos"))
+    demo_path = os.path.join(base_demo_dir, demo_id)
+    if not os.path.exists(demo_path):
+        return {"status": "error", "message": f"Demo repo '{demo_id}' not found"}
+
+    patches = {}
+    for filename in os.listdir(demo_path):
+        if filename.endswith(".broken.py"):
+            target_name = filename.replace(".broken.py", ".py")
+            src = os.path.join(demo_path, filename)
+            dst = os.path.join(demo_path, target_name)
+            if os.path.exists(dst):
+                with open(src, "r") as f_src, open(dst, "r") as f_dst:
+                    diff_lines = list(difflib.unified_diff(
+                        f_src.read().splitlines(keepends=True),
+                        f_dst.read().splitlines(keepends=True),
+                        fromfile=f"a/{target_name}",
+                        tofile=f"b/{target_name}"
+                    ))
+                    patches[target_name] = "".join(diff_lines)
+
+    combined_patch = "\n".join(patches.values())
+    return {
+        "demo_id": demo_id,
+        "patch": combined_patch,
+        "filename": f"reposurgeon-{demo_id}-fix.patch"
+    }
 
 @app.post("/api/demos/{demo_id}/reset")
 def reset_demo(demo_id: str):

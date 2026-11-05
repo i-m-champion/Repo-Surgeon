@@ -5,12 +5,12 @@ import asyncio
 from typing import Dict, Any, Callable, Awaitable
 from app.sandbox import sandbox_manager
 from app.vultr_client import vultr_client
-from app.prompts import SYSTEM_SURGEON_PROMPT, DIAGNOSIS_USER_PROMPT, MULTI_TURN_RETRY_PROMPT
+from app.prompts import SYSTEM_SURGEON_PROMPT, DIAGNOSIS_USER_PROMPT, REFLECTION_USER_PROMPT
 
 class RepoSurgeonAgent:
     """
     Autonomous AI agent that orchestrates repo diagnosis, isolated sandbox execution,
-    and iterative multi-turn repair powered by Vultr Serverless Inference.
+    and iterative multi-turn reflection powered by Vultr Serverless Inference (Llama 3.3 70B).
     """
     def __init__(self, repo_path: str, stream_callback: Callable[[Dict[str, Any]], Awaitable[None]], max_iterations: int = 3):
         self.repo_path = repo_path
@@ -27,7 +27,7 @@ class RepoSurgeonAgent:
         await self.stream(data)
 
     async def heal(self, target_file_rel: str = "calculator.py", test_cmd: str = "pytest -v"):
-        """Run the autonomous multi-turn healing workflow."""
+        """Run the autonomous multi-turn healing workflow with self-correcting reflection."""
         repo_name = os.path.basename(self.repo_path)
         await self.log("INIT", f"Initializing RepoSurgeon on target repository: {repo_name}", {
             "repo": repo_name,
@@ -46,6 +46,7 @@ class RepoSurgeonAgent:
 
         current_code = initial_unmodified_code
         last_test_output = ""
+        prev_patch_summary = ""
 
         # Step 1: Execute Baseline Tests in Isolated Sandbox
         await self.log("SANDBOX_START", f"Spinning up isolated sandbox to run baseline tests ({test_cmd})...", {
@@ -59,18 +60,21 @@ class RepoSurgeonAgent:
         await self.log("SANDBOX_RESULT", f"Initial test run completed with status: {test_result['status']}", test_result)
 
         if test_result["status"] == "PASS":
-            await self.log("SUCCESS", "All tests are already passing! No surgery required.", {
-                "test_metrics": test_result.get("test_metrics", {})
+            await self.log("VERIFIED_GREEN", "All tests are already passing! No surgery required.", {
+                "test_metrics": test_result.get("test_metrics", {}),
+                "security_audit": test_result.get("security_audit", {})
             })
             return
 
-        # Multi-Turn Autonomous Repair Loop
+        # Multi-Turn Autonomous Reflection Loop
         for iteration in range(1, self.max_iterations + 1):
-            await self.log("AI_THINKING", f"[Iteration {iteration}/{self.max_iterations}] Querying Vultr Serverless Inference (Llama 3.3 70B)...", {
-                "iteration": iteration,
-                "max_iterations": self.max_iterations,
-                "model": vultr_client.model,
-                "endpoint": vultr_client.base_url
+            turn_step = f"TURN_{iteration}_ATTEMPT"
+            patch_step = f"TURN_{iteration}_PATCH"
+
+            await self.log(turn_step, f"[Turn {iteration}/{self.max_iterations}] Analyzing failures and synthesizing surgical patch via Vultr Inference...", {
+                "turn": iteration,
+                "max_turns": self.max_iterations,
+                "model": vultr_client.model
             })
 
             if iteration == 1:
@@ -80,20 +84,15 @@ class RepoSurgeonAgent:
                     file_content=current_code
                 )
             else:
-                user_prompt = MULTI_TURN_RETRY_PROMPT.format(
-                    iteration=iteration,
+                user_prompt = REFLECTION_USER_PROMPT.format(
+                    turn=iteration,
+                    prev_turn=iteration - 1,
                     test_output=last_test_output,
                     file_name=target_file_rel,
                     file_content=current_code
                 )
 
             ai_response, inference_telemetry = vultr_client.query(SYSTEM_SURGEON_PROMPT, user_prompt)
-
-            await self.log("AI_PROPOSAL", f"[Iteration {iteration}] Vultr Inference generated diagnosis & surgical patch ({inference_telemetry.get('latency_ms', 0)}ms).", {
-                "iteration": iteration,
-                "raw_response": ai_response,
-                "inference_telemetry": inference_telemetry
-            })
 
             # Extract Code Patch
             new_code = self._extract_code_block(ai_response, current_code)
@@ -110,9 +109,11 @@ class RepoSurgeonAgent:
             lines_added = sum(1 for l in diff_lines if l.startswith('+') and not l.startswith('+++'))
             lines_removed = sum(1 for l in diff_lines if l.startswith('-') and not l.startswith('---'))
 
-            await self.log("PATCH_GENERATED", f"[Iteration {iteration}] Surgical patch calculated (+{lines_added} / -{lines_removed} lines).", {
-                "iteration": iteration,
+            await self.log(patch_step, f"[Turn {iteration}] Vultr Llama 3.3 patch synthesized (+{lines_added}/-{lines_removed} lines, {inference_telemetry.get('latency_ms', 0)}ms).", {
+                "turn": iteration,
                 "diff": diff_text,
+                "raw_response": ai_response,
+                "inference_telemetry": inference_telemetry,
                 "stats": {
                     "lines_added": lines_added,
                     "lines_removed": lines_removed
@@ -123,26 +124,26 @@ class RepoSurgeonAgent:
             with open(target_abs_path, "w", encoding="utf-8") as f:
                 f.write(new_code)
 
-            await self.log("SANDBOX_VERIFY", f"[Iteration {iteration}] Re-executing test suite in isolated micro-sandbox...", {
-                "iteration": iteration,
+            await self.log("SANDBOX_VERIFY", f"[Turn {iteration}] Re-executing test suite in isolated micro-sandbox...", {
+                "turn": iteration,
                 "command": test_cmd
             })
 
             verify_test = sandbox_manager.execute_in_sandbox(self.repo_path, test_cmd)
             last_test_output = verify_test["output"]
 
-            await self.log("SANDBOX_VERIFY_RESULT", f"[Iteration {iteration}] Verification test status: {verify_test['status']}", verify_test)
+            await self.log("SANDBOX_VERIFY_RESULT", f"[Turn {iteration}] Sandbox verification status: {verify_test['status']}", verify_test)
 
             if verify_test["status"] == "PASS":
                 # Generate Git Pull Request payload
                 pr_payload = {
                     "title": f"fix({repo_name}): autonomous surgical repair via Vultr Serverless Inference",
                     "branch": f"reposurgeon/patch-{repo_name}",
-                    "body": f"## 🩺 RepoSurgeon Autonomous Repair\n\nAll tests passed (**100% Green**) inside the Vultr micro-sandbox with **Blast Radius Zero**.\n\n### Metrics:\n- **Model:** Vultr Serverless Inference (`llama-3.3-70b-instruct`)\n- **Iterations:** {iteration}/{self.max_iterations}\n- **Diff Stats:** +{lines_added} / -{lines_removed} lines\n- **Containment:** Memory 512MB, Network Quarantined\n\n```diff\n{diff_text}```",
+                    "body": f"## 🩺 RepoSurgeon Autonomous Repair\n\nAll tests passed (**100% Green**) inside the Vultr micro-sandbox with **Blast Radius Zero**.\n\n### Metrics:\n- **Model:** Vultr Serverless Inference (`llama-3.3-70b-instruct`)\n- **Turns to Repair:** {iteration}/{self.max_iterations}\n- **Diff Stats:** +{lines_added} / -{lines_removed} lines\n- **Containment:** Memory 512MB, Network Quarantined\n\n```diff\n{diff_text}```",
                     "commit_message": f"fix({repo_name}): auto-heal test suite failures in {target_file_rel}\n\nVerified inside Vultr ephemeral sandbox."
                 }
 
-                await self.log("HEALED", f"🎉 SUCCESS! All test cases passed in iteration {iteration}/{self.max_iterations}. Repo is 100% healed!", {
+                success_payload = {
                     "iteration": iteration,
                     "max_iterations": self.max_iterations,
                     "diff": diff_text,
@@ -153,22 +154,38 @@ class RepoSurgeonAgent:
                     },
                     "test_metrics": verify_test.get("test_metrics", {}),
                     "security_audit": verify_test.get("security_audit", {}),
-                    "pr_metadata": pr_payload
-                })
+                    "pr_metadata": pr_payload,
+                    "patch_content": diff_text
+                }
+
+                await self.log("VERIFIED_GREEN", f"🎉 SUCCESS! All test cases passed in Turn {iteration}/{self.max_iterations}. Repo is 100% healed!", success_payload)
+                await self.log("HEALED", f"Surgery complete! Verified 100% green inside Vultr micro-sandbox.", success_payload)
                 return
 
             else:
                 if iteration < self.max_iterations:
-                    await self.log("ITERATION_RETRY", f"Iteration {iteration} partially healed tests. Self-correcting in next iteration...", {
-                        "iteration": iteration,
-                        "remaining_failures": verify_test.get("test_metrics", {}).get("failed", 1)
+                    # Self-Correction Reflection Step
+                    failed_count = verify_test.get("test_metrics", {}).get("failed", 1)
+                    await self.log("REFLECTING", f"Turn {iteration} resolved partial bugs, but {failed_count} failure(s) remain. Agent reflecting on traceback to formulate Turn {iteration + 1} patch...", {
+                        "turn": iteration,
+                        "remaining_failures": failed_count,
+                        "trace_snippet": last_test_output[-500:] if len(last_test_output) > 500 else last_test_output
                     })
+                    await asyncio.sleep(0.4)
                 else:
-                    await self.log("PARTIAL_FIX", f"Reached max iterations ({self.max_iterations}). Tests partially healed.", {
+                    await self.log("PARTIAL_FIX", f"Reached max turns ({self.max_iterations}). Tests partially healed.", {
                         "diff": diff_text,
                         "verified": False,
                         "test_metrics": verify_test.get("test_metrics", {})
                     })
+
+    def _extract_code_block(self, response_text: str, fallback: str) -> str:
+        """Extract content inside ```python ... ``` or return fallback."""
+        pattern = r"```(?:python)?\s*([\s\S]*?)```"
+        matches = re.findall(pattern, response_text)
+        if matches:
+            return matches[0].strip() + "\n"
+        return fallback
 
     def _extract_code_block(self, response_text: str, fallback: str) -> str:
         """Extract content inside ```python ... ``` or return fallback."""

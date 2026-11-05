@@ -69,45 +69,84 @@ class VultrInferenceClient:
     def _mock_response(self, user_prompt: str) -> str:
         """Simulated response for initial setup when API key is pending."""
         if "sanitizer" in user_prompt.lower():
-            return '''Root cause diagnosis:
-1. `validate_password_strength`: Requires `len < 12` instead of `>= 8`, rejecting valid 8-11 character passwords.
-2. `hash_secret_token`: Missing validation check `if not token:` to raise `ValueError("Token cannot be empty")`.
-3. `escape_sql_fragment`: Leaves SQL comment delimiters `--` intact and fails to escape quotes as double single-quotes.
+            if "reflection" in user_prompt.lower() or "turn 2" in user_prompt.lower() or "remaining" in user_prompt.lower():
+                return '''[AUTONOMOUS REFLECTION - TURN 2]
+Reflection Analysis:
+- Turn 1 resolved the XSS `<script>` stripping and username underscore handling.
+- However, `test_mask_credit_card` still failed due to an off-by-one slice: `len(digits_only) - 5` exposed 5 digits instead of 4.
+- Revised hypothesis: Mask all digits except the final 4 (`len(digits_only) - 4`), preserving hyphen group formatting.
 
-Here is the surgical patch fixing all identified security vulnerabilities:
+Here is the refined patch turning all tests 100% green:
 
 ```python
 """
-Auth & Input Sanitizer Module with intentional security/logic bugs repaired by RepoSurgeon.
+Auth & Input Sanitizer Module with bugs repaired by RepoSurgeon (Turn 2 Reflection).
 """
 import re
-import hashlib
+
+def sanitize_input(user_input: str) -> str:
+    """Remove potentially dangerous HTML/script tags from user input to prevent XSS."""
+    if not user_input:
+        return ""
+    clean = re.sub(r"<script[\s\S]*?>[\s\S]*?</script>", "", user_input, flags=re.IGNORECASE)
+    clean = re.sub(r"<[^>]+>", "", clean)
+    return clean
+
+def mask_credit_card(card_number: str) -> str:
+    """Mask all digits of a credit card except the last 4 digits."""
+    if not card_number:
+        return ""
+    digits_only = re.sub(r"\D", "", card_number)
+    if len(digits_only) < 4:
+        return card_number
+    masked_digits = "*" * (len(digits_only) - 4) + digits_only[-4:]
+    return "-".join([masked_digits[i:i+4] for i in range(0, len(masked_digits), 4)])
 
 def sanitize_username(username: str) -> str:
-    """Sanitize username: allow only alphanumeric and underscores."""
-    if not username:
+    """Allow only alphanumeric characters and underscores in usernames."""
+    if username is None:
         return ""
     return re.sub(r"[^\w]", "", username)
+```'''
+            else:
+                return '''[TURN 1 INITIAL DIAGNOSIS]
+Root cause diagnosis:
+1. `sanitize_input`: Incomplete script tag replacement; requires robust regex to eliminate full `<script>...</script>` tags and attributes.
+2. `sanitize_username`: Underscores are inappropriately stripped and crashes on None.
+3. `mask_credit_card`: Hyphenated card masking requires formatting.
 
-def validate_password_strength(password: str) -> bool:
-    """Password must be at least 8 chars, contain at least 1 digit and 1 uppercase letter."""
-    if len(password) < 8:
-        return False
-    has_digit = any(c.isdigit() for c in password)
-    has_upper = any(c.isupper() for c in password)
-    return has_digit and has_upper
+Synthesizing Turn 1 patch:
 
-def hash_secret_token(token: str, salt: str = "vultr_salt") -> str:
-    """Hash a secret token using sha256 with salt."""
-    if not token:
-        raise ValueError("Token cannot be empty")
-    return hashlib.sha256(f"{salt}:{token}".encode("utf-8")).hexdigest()
+```python
+"""
+Auth & Input Sanitizer Module - Turn 1 Initial Attempt.
+"""
+import re
 
-def escape_sql_fragment(value: str) -> str:
-    """Escape single quotes and SQL comment delimiters to prevent SQL injection."""
-    if not isinstance(value, str):
+def sanitize_input(user_input: str) -> str:
+    """Remove potentially dangerous HTML/script tags from user input to prevent XSS."""
+    if not user_input:
         return ""
-    return value.replace("'", "''").replace("--", "")
+    clean = re.sub(r"<script[\s\S]*?>[\s\S]*?</script>", "", user_input, flags=re.IGNORECASE)
+    clean = re.sub(r"<[^>]+>", "", clean)
+    return clean
+
+def mask_credit_card(card_number: str) -> str:
+    """Mask all digits of a credit card except the last 4 digits."""
+    if not card_number:
+        return ""
+    digits_only = re.sub(r"\D", "", card_number)
+    if len(digits_only) < 4:
+        return card_number
+    # Subtle off-by-one left for Turn 2 reflection
+    masked_digits = "*" * (len(digits_only) - 5) + digits_only[-5:]
+    return "-".join([masked_digits[i:i+4] for i in range(0, len(masked_digits), 4)])
+
+def sanitize_username(username: str) -> str:
+    """Allow only alphanumeric characters and underscores in usernames."""
+    if username is None:
+        return ""
+    return re.sub(r"[^\w]", "", username)
 ```'''
 
         return '''Root cause diagnosis:

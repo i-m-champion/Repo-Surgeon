@@ -102,9 +102,10 @@ export default function ReasoningFeed({
     switch (step) {
       case 'HEALED':
       case 'SUCCESS':
+      case 'VERIFIED_GREEN':
         return (
           <span className="inline-flex items-center gap-1 text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]">
-            <CheckCircle2 className="h-3 w-3 text-emerald-400" /> HEALED
+            <CheckCircle2 className="h-3 w-3 text-emerald-400" /> VERIFIED GREEN
           </span>
         );
       case 'ERROR':
@@ -113,10 +114,28 @@ export default function ReasoningFeed({
             <XCircle className="h-3 w-3 text-rose-400" /> ERROR
           </span>
         );
+      case 'REFLECTING':
       case 'ITERATION_RETRY':
         return (
-          <span className="inline-flex items-center gap-1 text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-amber-500/50">
-            <RefreshCw className="h-3 w-3 animate-spin text-amber-400" /> RETRY
+          <span className="inline-flex items-center gap-1 text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+            <RefreshCw className="h-3 w-3 animate-spin text-amber-400" /> REFLECTING
+          </span>
+        );
+      case 'TURN_1_ATTEMPT':
+      case 'TURN_2_ATTEMPT':
+      case 'TURN_3_ATTEMPT':
+        return (
+          <span className="inline-flex items-center gap-1 text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-cyan-500/50">
+            <Zap className="h-3 w-3 text-cyan-400" /> {step.replace('_ATTEMPT', '')}
+          </span>
+        );
+      case 'TURN_1_PATCH':
+      case 'TURN_2_PATCH':
+      case 'TURN_3_PATCH':
+      case 'PATCH_GENERATED':
+        return (
+          <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-purple-500/50">
+            <Code2 className="h-3 w-3 text-purple-400" /> PATCH
           </span>
         );
       case 'AI_THINKING':
@@ -133,12 +152,6 @@ export default function ReasoningFeed({
         return (
           <span className="inline-flex items-center gap-1 text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-blue-500/50">
             <ShieldCheck className="h-3 w-3 text-blue-400" /> SANDBOX
-          </span>
-        );
-      case 'PATCH_GENERATED':
-        return (
-          <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-purple-500/50">
-            <Code2 className="h-3 w-3 text-purple-400" /> PATCH
           </span>
         );
       default:
