@@ -16,7 +16,9 @@ import {
   FileCode,
   Network,
   Trash2,
-  Code2
+  Code2,
+  Play,
+  RotateCcw
 } from 'lucide-react';
 import TopologyVisualizer from './TopologyVisualizer';
 import CodeInspector from './CodeInspector';
@@ -33,7 +35,8 @@ export default function Workstation({
   targetFile = 'calculator.py',
   iteration = 1,
   onOpenPR,
-  onOpenAudit
+  onOpenAudit,
+  onStartSurgery
 }) {
   const [activeTab, setActiveTab] = useState(diff ? 'diff' : 'code');
   const [autoScroll, setAutoScroll] = useState(true);
@@ -96,59 +99,33 @@ export default function Workstation({
     URL.revokeObjectURL(url);
   };
 
-  // Syntax colorizer for pytest terminal output
+  // Syntax colorizer for pytest terminal output with high contrast
   const renderTerminalLine = (line, idx) => {
-    let lineClass = 'text-zinc-300';
-    if (line.includes('PASSED')) {
-      lineClass = 'text-emerald-400 font-semibold';
-    } else if (line.includes('FAILED') || line.includes('FAILURE')) {
-      lineClass = 'text-rose-400 font-semibold';
+    let lineClass = 'text-slate-300';
+    if (line.includes('PASSED') || line.includes('=== 4 passed')) {
+      lineClass = 'text-emerald-400 font-bold';
     } else if (
+      line.includes('FAILED') ||
+      line.includes('FAILURE') ||
       line.includes('ERROR') ||
-      line.includes('ZeroDivisionError') ||
-      line.includes('AssertionError')
+      line.includes('AssertionError') ||
+      line.includes('ZeroDivisionError')
     ) {
-      lineClass = 'text-amber-400';
-    } else if (line.startsWith('===') || line.startsWith('---')) {
-      lineClass = 'text-zinc-400 font-semibold';
-    } else if (line.startsWith('collected ') || line.startsWith('test session starts')) {
-      lineClass = 'text-zinc-500';
-    }
-
-    return (
-      <div key={idx} className={`leading-relaxed whitespace-pre font-mono text-[11px] ${lineClass}`}>
-        {line || '\u00A0'}
-      </div>
-    );
-  };
-
-  // Syntax colorizer for unified diff viewer
-  const renderDiffLine = (line, idx) => {
-    let lineClass = 'text-zinc-300';
-    let bgClass = '';
-
-    if (line.startsWith('+') && !line.startsWith('+++')) {
-      lineClass = 'text-emerald-300';
-      bgClass = 'bg-emerald-950/20 border-l-2 border-emerald-500 pl-2';
-    } else if (line.startsWith('-') && !line.startsWith('---')) {
-      lineClass = 'text-rose-300';
-      bgClass = 'bg-rose-950/20 border-l-2 border-rose-500 pl-2';
-    } else if (line.startsWith('@@')) {
-      lineClass = 'text-blue-400 font-semibold';
-      bgClass = 'bg-blue-950/15 py-0.5 pl-2';
-    } else if (line.startsWith('+++') || line.startsWith('---')) {
-      lineClass = 'text-zinc-400 font-bold';
-      bgClass = 'bg-zinc-900/40 pl-2';
-    } else {
-      bgClass = 'pl-2 text-zinc-400';
+      lineClass = 'text-rose-400 font-bold';
+    } else if (line.includes('def test_') || line.includes('collected ')) {
+      lineClass = 'text-cyan-400 font-semibold';
+    } else if (line.startsWith('>') || line.startsWith('E   ')) {
+      lineClass = 'text-amber-300 font-medium';
+    } else if (line.startsWith('rootdir:') || line.startsWith('platform ')) {
+      lineClass = 'text-slate-400';
     }
 
     return (
       <div
         key={idx}
-        className={`flex items-center text-[11px] font-mono leading-relaxed hover:bg-zinc-800/20 ${bgClass}`}
+        className="flex items-start hover:bg-white/[0.03] px-2 py-0.5 rounded font-mono text-[11px] leading-5"
       >
-        <span className="w-9 shrink-0 text-right pr-3 select-none text-[10px] text-zinc-600 font-mono">
+        <span className="w-10 shrink-0 text-right pr-3 select-none text-[10px] text-slate-500 font-mono">
           {idx + 1}
         </span>
         <span className={`flex-1 whitespace-pre ${lineClass}`}>{line}</span>
@@ -156,51 +133,89 @@ export default function Workstation({
     );
   };
 
+  // Diff Line Highlighter with high contrast
+  const renderDiffLine = (line, idx) => {
+    let bg = 'hover:bg-zinc-800/20 text-slate-300';
+    let prefix = ' ';
+    if (line.startsWith('+') && !line.startsWith('+++')) {
+      bg = 'bg-emerald-950/40 text-emerald-300 border-l-2 border-emerald-500 font-semibold';
+      prefix = '+';
+    } else if (line.startsWith('-') && !line.startsWith('---')) {
+      bg = 'bg-rose-950/40 text-rose-300 border-l-2 border-rose-500 line-through opacity-85';
+      prefix = '-';
+    } else if (line.startsWith('@@')) {
+      bg = 'bg-blue-950/40 text-blue-300 border-y border-blue-900/40 font-semibold';
+    }
+
+    return (
+      <div
+        key={idx}
+        className={`px-3 py-0.5 font-mono text-xs flex items-center gap-2 ${bg}`}
+      >
+        <span className="w-9 shrink-0 text-right select-none text-[10px] text-slate-500">
+          {idx + 1}
+        </span>
+        <span className="select-none font-bold text-xs w-3 text-center">{prefix}</span>
+        <span className="whitespace-pre flex-1">{line.slice(1) || line}</span>
+      </div>
+    );
+  };
+
   return (
     <main className="flex-1 flex flex-col h-full bg-[#0D0E12] overflow-hidden select-none">
-      {/* Top Tab Bar (Bolt.new IDE Style) */}
-      <div className="h-10 border-b border-zinc-800/80 bg-[#12131A] px-3 flex items-center justify-between gap-3 shrink-0">
-        {/* Left: Minimalist Tabs with Framer Motion layoutId */}
-        <div className="flex items-center gap-1">
+      {/* Top Tab Bar: Solid, Tactile, High-Contrast Containers */}
+      <div className="h-12 border-b border-zinc-800 bg-[#12131A] px-4 flex items-center justify-between gap-3 shrink-0">
+        {/* Left: Solid Tactile Tab Buttons */}
+        <div className="flex items-center gap-2">
           {/* Tab 1: Code */}
           <button
             onClick={() => setActiveTab('code')}
-            className={`relative px-3 py-1 rounded-md text-xs font-mono transition-colors ${activeTab === 'code'
-                ? 'text-white bg-zinc-800/90 font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
-              }`}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all flex items-center gap-2 shadow-sm ${
+              activeTab === 'code'
+                ? 'bg-blue-600 text-white border-blue-400 shadow-blue-500/20'
+                : 'bg-zinc-900/90 text-slate-300 border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-zinc-700'
+            }`}
           >
-            Code
+            <Code2 className="h-3.5 w-3.5" />
+            <span>Code Inspector</span>
           </button>
 
-          {/* Tab 2: Diff */}
+          {/* Tab 2: Terminal */}
           <button
-            onClick={() => setActiveTab('diff')}
-            className={`relative px-3 py-1 rounded-md text-xs font-mono transition-colors flex items-center gap-1.5 ${activeTab === 'diff'
-                ? 'text-white bg-zinc-800/90 font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
-              }`}
+            onClick={() => setActiveTab('terminal')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all flex items-center gap-2 shadow-sm ${
+              activeTab === 'terminal'
+                ? 'bg-blue-600 text-white border-blue-400 shadow-blue-500/20'
+                : 'bg-zinc-900/90 text-slate-300 border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-zinc-700'
+            }`}
           >
-            <span>Diff</span>
-            {stats && (
-              <span className="text-[10px] text-emerald-400">
-                +{stats.lines_added || 0}/-{stats.lines_removed || 0}
+            <TerminalIcon className="h-3.5 w-3.5" />
+            <span>Sandbox Terminal</span>
+            {sandboxOutputs.length > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                activeTab === 'terminal' ? 'bg-white/20 text-white' : 'bg-zinc-800 text-slate-300'
+              }`}>
+                {sandboxOutputs.length}
               </span>
             )}
           </button>
 
-          {/* Tab 3: Terminal */}
+          {/* Tab 3: Diff */}
           <button
-            onClick={() => setActiveTab('terminal')}
-            className={`relative px-3 py-1 rounded-md text-xs font-mono transition-colors flex items-center gap-1.5 ${activeTab === 'terminal'
-                ? 'text-white bg-zinc-800/90 font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
-              }`}
+            onClick={() => setActiveTab('diff')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all flex items-center gap-2 shadow-sm ${
+              activeTab === 'diff'
+                ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-500/20'
+                : 'bg-zinc-900/90 text-slate-300 border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-zinc-700'
+            }`}
           >
-            <span>Terminal</span>
-            {sandboxOutputs.length > 0 && (
-              <span className="text-[10px] px-1 rounded bg-zinc-700/60 text-zinc-300">
-                {sandboxOutputs.length}
+            <FileCode className="h-3.5 w-3.5" />
+            <span>Surgical Diff</span>
+            {stats && (
+              <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                activeTab === 'diff' ? 'bg-white/20 text-white' : 'bg-emerald-950 text-emerald-400 border border-emerald-800/80'
+              }`}>
+                +{stats.lines_added || 0}/-{stats.lines_removed || 0}
               </span>
             )}
           </button>
@@ -208,98 +223,82 @@ export default function Workstation({
           {/* Tab 4: Topology */}
           <button
             onClick={() => setActiveTab('topology')}
-            className={`relative px-3 py-1 rounded-md text-xs font-mono transition-colors ${activeTab === 'topology'
-                ? 'text-white bg-zinc-800/90 font-medium'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/60'
-              }`}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all flex items-center gap-2 shadow-sm ${
+              activeTab === 'topology'
+                ? 'bg-purple-600 text-white border-purple-400 shadow-purple-500/20'
+                : 'bg-zinc-900/90 text-slate-300 border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-zinc-700'
+            }`}
           >
-            Topology
+            <Network className="h-3.5 w-3.5" />
+            <span>Topology</span>
           </button>
         </div>
 
-        {/* Right: Metadata Chips & Action Buttons */}
+        {/* Right: Solid Action Buttons */}
         <div className="flex items-center gap-2">
           {activeTab === 'code' && (
-            <>
-              <span className="hidden sm:inline-flex px-2 py-0.5 rounded bg-zinc-900 text-zinc-400 border border-zinc-800 text-[10px] font-mono">
-                Python 3.11
-              </span>
-              <span className="hidden sm:inline-flex px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] font-mono">
-                3 Issues Detected
-              </span>
-            </>
+            <span className="hidden sm:inline-flex px-2.5 py-1 rounded-md bg-zinc-900 text-slate-300 border border-zinc-800 text-xs font-mono">
+              Python 3.11 • {targetFile}
+            </span>
           )}
 
           {activeTab === 'diff' && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={downloadPatch}
                 disabled={!diff}
-                title="Download unified diff as .patch"
-                className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[11px] font-mono flex items-center gap-1 border border-zinc-800 transition-colors disabled:opacity-30"
+                className="px-3 py-1.5 rounded-lg bg-zinc-850 hover:bg-zinc-800 text-slate-200 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 border border-zinc-700 transition-colors shadow-sm disabled:opacity-30 cursor-pointer"
               >
-                <Download className="h-3 w-3" />
-                <span>.patch</span>
+                <Download className="h-3.5 w-3.5 text-blue-400" />
+                <span>Download .patch</span>
               </button>
 
               <button
                 onClick={copyDiffToClipboard}
                 disabled={!diff}
-                title="Copy unified diff"
-                className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[11px] font-mono flex items-center gap-1 border border-zinc-800 transition-colors disabled:opacity-30"
+                className="px-3 py-1.5 rounded-lg bg-zinc-850 hover:bg-zinc-800 text-slate-200 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 border border-zinc-700 transition-colors shadow-sm disabled:opacity-30 cursor-pointer"
               >
                 {copiedDiff ? (
                   <>
-                    <Check className="h-3 w-3 text-emerald-400" />
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
                     <span className="text-emerald-400">Copied</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3 w-3" />
-                    <span>Copy</span>
+                    <Copy className="h-3.5 w-3.5" />
+                    <span>Copy Diff</span>
                   </>
                 )}
               </button>
-
-              {isHealed && (
-                <button
-                  onClick={onOpenPR}
-                  className="px-2.5 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-[11px] font-mono font-medium flex items-center gap-1.5 border border-emerald-500/30 transition-colors"
-                >
-                  <CheckCircle2 className="h-3 w-3" />
-                  <span>1-Click PR Ready</span>
-                </button>
-              )}
             </div>
           )}
 
           {activeTab === 'terminal' && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setClearedLogs(true)}
-                title="Clear current terminal log output"
-                className="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 text-[10px] font-mono flex items-center gap-1 border border-zinc-800 transition-colors"
-              >
-                <Trash2 className="h-3 w-3" />
-                <span>Clear</span>
-              </button>
-
-              <button
                 onClick={() => setAutoScroll(!autoScroll)}
-                className={`px-2 py-1 rounded text-[10px] font-mono border transition-colors ${autoScroll
-                    ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
-                    : 'text-zinc-500 border-zinc-800 hover:text-zinc-300'
-                  }`}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-mono border transition ${
+                  autoScroll
+                    ? 'bg-zinc-800 text-emerald-400 border-zinc-700'
+                    : 'bg-zinc-900 text-slate-400 border-zinc-800'
+                }`}
               >
-                Scroll: {autoScroll ? 'ON' : 'OFF'}
+                Auto-scroll {autoScroll ? 'ON' : 'OFF'}
+              </button>
+              <button
+                onClick={() => setClearedLogs(true)}
+                title="Clear console output"
+                className="p-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-slate-400 hover:text-white border border-zinc-800 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Main Workstation Viewport */}
-      <div className="flex-1 overflow-hidden relative flex flex-col">
+      {/* Main Tab Views Canvas with High-Contrast Backgrounds */}
+      <div className="flex-1 overflow-hidden relative bg-[#090B10]">
         <AnimatePresence mode="wait">
           {activeTab === 'code' ? (
             /* TAB: CODE INSPECTOR */
@@ -309,7 +308,7 @@ export default function Workstation({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
-              className="flex-1 flex flex-col h-full overflow-hidden"
+              className="h-full flex flex-col overflow-hidden"
             >
               <CodeInspector repoName={repoName} targetFile={targetFile} />
             </motion.div>
@@ -321,33 +320,44 @@ export default function Workstation({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
-              className="flex-1 flex flex-col h-full overflow-hidden bg-[#0D1117]"
+              className="flex-1 flex flex-col h-full overflow-hidden bg-[#05070F]"
             >
-              {isHealed && (
-                <div className="px-4 py-2.5 bg-emerald-950/20 border-b border-emerald-500/20 flex items-center justify-between gap-3 shrink-0">
-                  <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    <span>Verified Green: All test assertions passed inside sandbox</span>
-                  </div>
+              {/* Diff Header Banner */}
+              <div className="px-4 py-2 border-b border-zinc-800 bg-[#0E1018] flex items-center justify-between text-xs font-mono shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-white">Target File:</span>
+                  <code className="text-blue-400">{targetFile}</code>
+                  {stats && (
+                    <span className="text-zinc-400 text-[11px] ml-2">
+                      ({stats.lines_added || 0} insertions(+), {stats.lines_removed || 0} deletions(-))
+                    </span>
+                  )}
+                </div>
+
+                {isHealed && (
                   <button
                     onClick={onOpenPR}
-                    className="px-3 py-1 rounded bg-emerald-500 text-black text-xs font-mono font-semibold hover:bg-emerald-400 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-semibold shadow-sm transition"
                   >
-                    Open Pull Request
+                    <GitPullRequest className="h-3.5 w-3.5" />
+                    <span>Create Pull Request</span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-1 select-text font-mono text-xs">
                 {!diff ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-8 text-zinc-500 space-y-1.5 font-sans">
-                    <p className="text-sm text-zinc-400 font-medium">No diff generated yet</p>
-                    <p className="text-xs text-zinc-500">
-                      Unified code diff will appear here after the agent completes diagnosis and patching.
+                  <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400 space-y-2 font-sans">
+                    <div className="h-10 w-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-slate-400 mx-auto">
+                      <FileCode className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm text-zinc-200 font-semibold">No diff generated yet</p>
+                    <p className="text-xs text-slate-400 max-w-sm">
+                      Click <strong className="text-blue-400">"Start Surgery"</strong> to run automated diagnosis. The unified patch will render here line-by-line.
                     </p>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-zinc-800 bg-[#0B0D13] overflow-hidden">
+                  <div className="rounded-xl border border-zinc-800 bg-[#05070F] overflow-hidden shadow-md">
                     <div className="py-2 overflow-x-auto">
                       {diff.split('\n').map((line, idx) => renderDiffLine(line, idx))}
                     </div>
@@ -363,7 +373,7 @@ export default function Workstation({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.12 }}
-              className="flex-1 flex flex-col h-full overflow-hidden bg-[#0A0D14]"
+              className="flex-1 flex flex-col h-full overflow-hidden bg-[#05070F]"
             >
               {/* Terminal Logs Output */}
               <div
@@ -371,30 +381,46 @@ export default function Workstation({
                 className="flex-1 p-4 overflow-y-auto space-y-3 font-mono text-xs"
               >
                 {sandboxOutputs.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-8 text-zinc-500 space-y-1.5 font-sans">
-                    <p className="text-sm text-zinc-400 font-medium">Sandbox Terminal Ready</p>
-                    <p className="text-xs text-zinc-500">
-                      Isolated Pytest runs and output streams will display here.
-                    </p>
+                  <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3 font-sans">
+                    <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-cyan-400 mx-auto shadow-md">
+                      <TerminalIcon className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-base text-white font-bold tracking-tight">Sandbox Terminal Idle</p>
+                      <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                        Pytest test runs, assertions, and verification traces inside the Vultr micro-sandbox will stream here in real-time.
+                      </p>
+                    </div>
+
+                    {/* Quick Trigger Button in Terminal if user lands here first */}
+                    <button
+                      onClick={onStartSurgery}
+                      disabled={status === 'running'}
+                      className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-blue-500/20 cursor-pointer"
+                    >
+                      <Play className="h-3.5 w-3.5 fill-white" />
+                      <span>Execute Pytest & Surgery</span>
+                    </button>
                   </div>
                 ) : (
                   sandboxOutputs.map((item, idx) => (
-                    <div key={idx} className="space-y-1">
-                      <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono">
-                        <span className="text-zinc-600">$</span>
-                        <span className="text-zinc-200">{item.message}</span>
+                    <div key={idx} className="space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs text-slate-300 font-mono">
+                        <span className="text-cyan-400 font-bold">$</span>
+                        <span className="text-zinc-100 font-semibold">{item.message}</span>
                         {item.status && (
                           <span
-                            className={`ml-auto text-[10px] px-1.5 py-0.2 rounded font-bold ${item.status === 'PASS'
-                                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/80'
-                                : 'bg-rose-950/60 text-rose-400 border border-rose-800/80'
-                              }`}
+                            className={`ml-auto text-[10px] px-2 py-0.5 rounded font-bold ${
+                              item.status === 'PASS'
+                                ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/40'
+                                : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                            }`}
                           >
                             {item.status}
                           </span>
                         )}
                       </div>
-                      <div className="p-3 rounded-lg bg-[#08090D] border border-zinc-800/60 text-zinc-300 font-mono text-[11px] overflow-x-auto leading-relaxed">
+                      <div className="p-3.5 rounded-xl bg-[#030408] border border-zinc-800 text-slate-200 font-mono text-[11px] overflow-x-auto leading-relaxed shadow-inner">
                         {item.output.split('\n').map((line, lIdx) =>
                           renderTerminalLine(line, lIdx)
                         )}
@@ -404,20 +430,21 @@ export default function Workstation({
                 )}
               </div>
 
-              {/* Minimalist Telemetry Dock */}
-              <div className="h-9 px-4 border-t border-zinc-800/80 bg-[#0E1018] flex items-center justify-between text-xs font-mono text-zinc-400 shrink-0">
-                <div className="flex items-center gap-4 text-[11px]">
-                  <span>CPU: <strong className="text-zinc-200">1.0 vCPU</strong></span>
-                  <span>RAM: <strong className="text-zinc-200">512 MB</strong></span>
-                  <span>Network: <strong className="text-zinc-200">Quarantined</strong></span>
-                  <span>Timeout: <strong className="text-zinc-200">45s</strong></span>
+              {/* Solid Telemetry Dock with Action Button */}
+              <div className="h-11 px-4 border-t border-zinc-800 bg-[#0E1018] flex items-center justify-between text-xs font-mono text-slate-300 shrink-0">
+                <div className="flex items-center gap-4 text-xs font-medium">
+                  <span>CPU: <strong className="text-white">1.0 vCPU</strong></span>
+                  <span>RAM: <strong className="text-white">512 MB Cgroup</strong></span>
+                  <span>Network: <strong className="text-emerald-400 font-semibold">Quarantined (0 Egress)</strong></span>
+                  <span>Timeout: <strong className="text-amber-400">45s Cap</strong></span>
                 </div>
 
                 <button
                   onClick={onOpenAudit}
-                  className="text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors"
+                  className="px-3 py-1 rounded-md bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-500/40 font-semibold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                 >
-                  Verify Isolation →
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>Verify Isolation Proof</span>
                 </button>
               </div>
             </motion.div>

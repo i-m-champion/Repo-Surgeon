@@ -206,6 +206,7 @@ export default function App() {
         onReset={resetState}
         onStartSurgery={startSurgery}
         onOpenAudit={() => setIsAuditOpen(true)}
+        onOpenPR={() => setIsPROpen(true)}
       />
 
       {/* Sub-Navigation Quick Anchor Bar */}
@@ -239,6 +240,7 @@ export default function App() {
           iteration={iteration}
           onOpenPR={() => setIsPROpen(true)}
           onOpenAudit={() => setIsAuditOpen(true)}
+          onStartSurgery={startSurgery}
         />
       </section>
 

@@ -5,12 +5,14 @@ import {
   Play,
   RotateCcw,
   ShieldCheck,
-  ChevronDown,
   Loader2,
   CheckCircle2,
+  GitPullRequest,
   AlertTriangle,
   FileCode,
-  FolderGit2
+  Flame,
+  Bug,
+  ShieldAlert
 } from 'lucide-react';
 
 export default function Header({
@@ -25,130 +27,139 @@ export default function Header({
   onReset,
   onStartSurgery,
   onOpenAudit,
+  onOpenPR
 }) {
   const isRunning = status === 'running';
+  const isHealed = status === 'healed';
+  const isCalculator = repoName === 'broken-calculator';
 
   return (
-    <header className="sticky top-0 z-50 w-full h-12 border-b border-zinc-800/80 bg-[#090A0F]/90 backdrop-blur-md px-4 flex items-center justify-between gap-4 shrink-0 select-none">
-      {/* Left: Logo & Bolt-Style Breadcrumbs */}
-      <div className="flex items-center gap-2.5 shrink-0">
-        <div className="h-7 w-7 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-blue-400">
-          <Stethoscope className="h-4 w-4" />
+    <header className="sticky top-0 z-50 w-full min-h-[64px] border-b border-zinc-800 bg-[#090A0F]/95 backdrop-blur-md px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-4 select-none">
+      {/* Left: Brand Identity & Active Target File */}
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+          <Stethoscope className="h-5 w-5" />
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs font-mono">
-          <span className="font-semibold text-zinc-100 font-sans tracking-tight">RepoSurgeon</span>
-          <span className="text-zinc-600">/</span>
-
-          {/* Repo Dropdown */}
-          <div className="relative flex items-center">
-            <select
-              value={repoName}
-              onChange={(e) => onRepoChange(e.target.value)}
-              disabled={isRunning}
-              className="appearance-none bg-zinc-900/80 hover:bg-zinc-800/80 text-zinc-300 hover:text-white font-mono text-[11px] px-2.5 py-1 pr-6 rounded-md border border-zinc-800 transition-colors cursor-pointer outline-none"
-            >
-              {demos && demos.length > 0 ? (
-                demos.map((d) => (
-                  <option key={d.id} value={d.id} className="bg-zinc-900 text-zinc-200">
-                    {d.name || d.id}
-                  </option>
-                ))
-              ) : (
-                <>
-                  <option value="broken-calculator" className="bg-zinc-900 text-zinc-200">
-                    broken-calculator
-                  </option>
-                  <option value="auth-sanitizer" className="bg-zinc-900 text-zinc-200">
-                    auth-sanitizer
-                  </option>
-                </>
-              )}
-            </select>
-            <ChevronDown className="absolute right-2 h-3 w-3 text-zinc-500 pointer-events-none" />
-          </div>
-
-          <span className="text-zinc-600">/</span>
-
-          {/* Target File Badge */}
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-900/60 border border-zinc-800/80 text-zinc-400 text-[11px]">
-            <FileCode className="h-3 w-3 text-zinc-500" />
-            {targetFile}
-          </span>
-
-          {/* Reset Baseline Icon Button */}
-          <button
-            onClick={onReset}
-            disabled={isRunning}
-            title="Reset repository to broken baseline"
-            className="p-1 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 rounded transition-colors disabled:opacity-30 ml-0.5"
-          >
-            <RotateCcw className="h-3 w-3" />
-          </button>
-        </div>
-      </div>
-
-      {/* Center: Unified Bolt.new Status Pill */}
-      <div className="hidden md:flex items-center justify-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-zinc-300">
-          {status === 'running' ? (
-            <>
-              <Loader2 className="h-3 w-3 animate-spin text-blue-400" />
-              <span>Analyzing & Healing (Iteration {iteration}/{maxIterations})...</span>
-            </>
-          ) : status === 'healed' ? (
-            <>
-              <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-              <span className="text-emerald-400">Verified Green • Blast Radius Zero</span>
-            </>
-          ) : status === 'error' ? (
-            <>
-              <AlertTriangle className="h-3 w-3 text-rose-400" />
-              <span className="text-rose-400">Diagnosis Alert</span>
-            </>
-          ) : (
-            <>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-white font-mono text-base tracking-tight">RepoSurgeon</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-950/70 text-blue-400 border border-blue-500/30 text-[10px] font-mono">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-status-pulse" />
-              <span>Vultr Llama 3.3 70B • Ephemeral Sandbox Ready</span>
-            </>
-          )}
+              Vultr Llama 3.3 70B
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-300">
+            <span>Target:</span>
+            <span className="text-zinc-200 bg-zinc-900 border border-zinc-700/80 px-2 py-0.5 rounded text-[11px] font-medium flex items-center gap-1">
+              <FileCode className="h-3 w-3 text-cyan-400" />
+              {targetFile}
+            </span>
+            <button
+              onClick={onReset}
+              disabled={isRunning}
+              title="Reset target repo to broken baseline"
+              className="p-1 text-slate-400 hover:text-white hover:bg-zinc-800 rounded transition-colors disabled:opacity-30"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Right: Security Audit & Primary Action Button */}
-      <div className="flex items-center gap-2.5 shrink-0">
+      {/* Center: Large, Self-Explanatory Scenario Toggle Cards */}
+      <div className="flex items-center gap-2.5 w-full sm:w-auto justify-center">
+        {/* Scenario A: Code Logic Bugs */}
+        <button
+          onClick={() => !isRunning && onRepoChange('broken-calculator')}
+          disabled={isRunning}
+          className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl border text-xs font-mono transition-all text-left ${
+            isCalculator
+              ? 'bg-blue-950/40 border-blue-500 text-white shadow-md shadow-blue-500/10 ring-1 ring-blue-500/50'
+              : 'bg-zinc-900/80 border-zinc-800 text-slate-300 hover:bg-zinc-850 hover:text-white hover:border-zinc-700'
+          }`}
+        >
+          <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
+            isCalculator ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-blue-400'
+          }`}>
+            <Bug className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="font-semibold font-sans text-xs flex items-center gap-1.5">
+              <span>Scenario A: Code Bugs</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300">Calculator</span>
+            </div>
+            <div className="text-[11px] text-slate-300 font-sans">
+              Heals 3 failing pytest regressions
+            </div>
+          </div>
+        </button>
+
+        {/* Scenario B: Adversarial Security Trap */}
+        <button
+          onClick={() => !isRunning && onRepoChange('auth-sanitizer')}
+          disabled={isRunning}
+          className={`flex items-center gap-2.5 px-3.5 py-2 rounded-xl border text-xs font-mono transition-all text-left ${
+            !isCalculator
+              ? 'bg-purple-950/40 border-purple-500 text-white shadow-md shadow-purple-500/10 ring-1 ring-purple-500/50'
+              : 'bg-zinc-900/80 border-zinc-800 text-slate-300 hover:bg-zinc-850 hover:text-white hover:border-zinc-700'
+          }`}
+        >
+          <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
+            !isCalculator ? 'bg-purple-600 text-white' : 'bg-zinc-800 text-purple-400'
+          }`}>
+            <ShieldAlert className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="font-semibold font-sans text-xs flex items-center gap-1.5">
+              <span>Scenario B: Security Exploit</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300">Sanitizer</span>
+            </div>
+            <div className="text-[11px] text-slate-300 font-sans">
+              Catches malicious credential theft
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Right: Security Audit & Hero "Start Surgery" Button */}
+      <div className="flex items-center gap-3 shrink-0">
         <button
           onClick={onOpenAudit}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-800 text-xs font-mono text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors"
+          className="hidden md:inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-zinc-700 bg-zinc-900/90 text-xs font-mono font-medium text-slate-200 hover:text-white hover:bg-zinc-800 transition shadow-sm"
           title="Inspect sandbox isolation telemetry & secret hygiene"
         >
-          <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+          <ShieldCheck className="h-4 w-4 text-emerald-400" />
           <span>Security Audit</span>
         </button>
 
-        <motion.button
-          onClick={onStartSurgery}
-          disabled={isRunning}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg font-mono text-xs font-medium text-white transition disabled:opacity-50 ${
-            isRunning
-              ? 'bg-zinc-800 cursor-not-allowed text-zinc-400'
-              : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:brightness-110 shadow-sm'
-          }`}
-        >
-          {isRunning ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              <span>Operating...</span>
-            </>
-          ) : (
-            <>
-              <Play className="h-3.5 w-3.5 fill-current" />
-              <span>Start Surgery</span>
-            </>
-          )}
-        </motion.button>
+        {/* Unmissable Hero Primary Action Button */}
+        {isHealed ? (
+          <motion.button
+            onClick={onOpenPR}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl font-mono text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-500/25 ring-2 ring-emerald-400/60 transition cursor-pointer"
+          >
+            <GitPullRequest className="h-4 w-4 text-white" />
+            <span>Verified Green (100% Passed) • View PR</span>
+          </motion.button>
+        ) : isRunning ? (
+          <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl font-mono text-sm font-bold text-amber-300 bg-amber-500/20 border-2 border-amber-500/60 shadow-lg shadow-amber-500/20 animate-pulse">
+            <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+            <span>Surgery in Progress (Turn {iteration}/{maxIterations})...</span>
+          </div>
+        ) : (
+          <motion.button
+            onClick={onStartSurgery}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.98 }}
+            className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-xl font-mono text-sm font-bold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 shadow-xl shadow-blue-500/30 hover:shadow-cyan-500/40 ring-2 ring-blue-500/50 hover:ring-cyan-400 transition cursor-pointer"
+          >
+            <Play className="h-4 w-4 fill-white" />
+            <span>Start Surgery</span>
+          </motion.button>
+        )}
       </div>
     </header>
   );

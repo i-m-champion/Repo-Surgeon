@@ -50,7 +50,7 @@ export default function CodeInspector({ repoName = 'broken-calculator', targetFi
     { num: 13, text: '    if not card_number: return ""', bug: false },
     { num: 14, text: '    digits_only = re.sub(r"\\D", "", card_number)', bug: false },
     { num: 15, text: '    # BUG: Off-by-one slice error exposing 5 digits instead of 4', bug: false },
-    { num: 16, text: '    masked = "*" * (len(digits_only) - 5) + digits_only[-5:]', bug: true, error: 'PCI violation: exposes 5 digits instead of allowed maximum of 4 digits' },
+    { num: 16, text: '    masked = "*" * (len(digits_only) - 5) + digits_only[-5:]', bug: true, error: 'PCI-DSS violation: exposes 5 digits instead of allowed maximum of 4 digits' },
     { num: 17, text: '    return "-".join([masked[i:i+4] for i in range(0, len(masked), 4)])', bug: false },
     { num: 18, text: '', bug: false },
     { num: 19, text: 'def sanitize_username(username: str) -> str:', bug: false },
@@ -70,59 +70,63 @@ export default function CodeInspector({ repoName = 'broken-calculator', targetFi
   const renderCodeTokens = (text) => {
     if (!text) return '\u00A0';
 
-    // Simple VS Code dark syntax coloring
+    // VS Code dark syntax coloring with high contrast
     if (text.startsWith('def ')) {
       const match = text.match(/^def\s+([a-zA-Z0-9_]+)(.*)$/);
       if (match) {
         return (
           <>
-            <span className="text-[#C586C0]">def </span>
-            <span className="text-[#DCDCAA]">{match[1]}</span>
+            <span className="text-[#C586C0] font-bold">def </span>
+            <span className="text-[#DCDCAA] font-semibold">{match[1]}</span>
             <span className="text-[#9CDCFE]">{match[2]}</span>
           </>
         );
       }
     }
     if (text.startsWith('import ') || text.startsWith('from ')) {
-      return <span className="text-[#C586C0]">{text}</span>;
+      return <span className="text-[#C586C0] font-semibold">{text}</span>;
     }
     if (text.trim().startsWith('return ')) {
       return (
         <>
           <span className="text-zinc-500">    </span>
-          <span className="text-[#C586C0]">return </span>
+          <span className="text-[#C586C0] font-bold">return </span>
           <span className="text-[#9CDCFE]">{text.trim().replace(/^return\s+/, '')}</span>
         </>
       );
     }
     if (text.trim().startsWith('"""') || text.trim().startsWith('#')) {
-      return <span className="text-[#6A9955]">{text}</span>;
+      return <span className="text-[#6A9955] italic font-sans">{text}</span>;
     }
 
-    return <span className="text-[#D4D4D4]">{text}</span>;
+    return <span className="text-[#F4F4F5]">{text}</span>;
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0D1117] select-text">
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#05070F] select-text">
       {/* Code Editor Body */}
-      <div className="flex-1 p-3 overflow-y-auto font-mono text-xs leading-5">
+      <div className="flex-1 p-4 overflow-y-auto font-mono text-[13px] leading-6">
         <div className="space-y-0.5">
           {lines.map((line, idx) => (
             <div key={idx} className="group">
               <div
-                className={`flex items-start rounded px-2 transition-colors ${line.bug ? 'bg-rose-950/20' : 'hover:bg-zinc-800/30'
-                  }`}
+                className={`flex items-start rounded px-2 transition-colors ${
+                  line.bug ? 'bg-rose-950/30' : 'hover:bg-zinc-800/40'
+                }`}
               >
-                {/* Gutter Line Numbers */}
-                <span className="w-8 shrink-0 text-right pr-4 select-none text-[11px] text-zinc-600 font-mono">
+                {/* Gutter Line Numbers with High Contrast */}
+                <span className="w-9 shrink-0 text-right pr-4 select-none text-xs text-slate-400 font-mono font-medium">
                   {line.num}
                 </span>
 
                 {/* Code Line */}
                 <div className="flex-1 min-w-0">
                   <div
-                    className={`whitespace-pre ${line.bug ? 'underline decoration-rose-500/60 decoration-wavy underline-offset-4' : ''
-                      }`}
+                    className={`whitespace-pre ${
+                      line.bug
+                        ? 'underline decoration-rose-500 decoration-wavy underline-offset-4 text-rose-200'
+                        : ''
+                    }`}
                   >
                     {renderCodeTokens(line.text)}
                   </div>
@@ -131,9 +135,9 @@ export default function CodeInspector({ repoName = 'broken-calculator', targetFi
 
               {/* VS Code Style Inline Diagnostic Annotation */}
               {line.bug && (
-                <div className="ml-10 my-1 mr-2 px-2.5 py-1 rounded bg-[#161B22] border border-rose-500/30 text-[11px] font-mono text-rose-300 flex items-center gap-1.5 shadow-sm">
-                  <AlertCircle className="h-3 w-3 text-rose-400 shrink-0" />
-                  <span>{line.error}</span>
+                <div className="ml-11 my-1.5 mr-2 px-3 py-1.5 rounded-lg bg-[#180A0E] border border-rose-500/50 text-xs font-mono text-rose-200 flex items-center gap-2 shadow-sm">
+                  <AlertCircle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                  <span className="font-semibold">{line.error}</span>
                 </div>
               )}
             </div>

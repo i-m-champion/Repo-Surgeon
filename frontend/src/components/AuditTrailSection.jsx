@@ -232,3 +232,4 @@ export default function AuditTrailSection({ logs = [], status = 'idle', repoName
     </section>
   );
 }
+

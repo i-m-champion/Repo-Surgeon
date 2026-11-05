@@ -14,7 +14,11 @@ import {
   Check,
   Play,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Flame,
+  Bug,
+  AlertTriangle,
+  ChevronDown
 } from 'lucide-react';
 
 export default function ReasoningFeed({
@@ -103,47 +107,39 @@ export default function ReasoningFeed({
       case 'HEALED':
       case 'SUCCESS':
         return (
-          <span className="inline-flex items-center gap-1 text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-emerald-500/30">
+          <span className="inline-flex items-center gap-1 text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded text-[10px] font-mono border border-emerald-500/40">
             <CheckCircle2 className="h-3 w-3" /> HEALED
           </span>
         );
       case 'ERROR':
         return (
-          <span className="inline-flex items-center gap-1 text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-rose-500/30">
+          <span className="inline-flex items-center gap-1 text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded text-[10px] font-mono border border-rose-500/40">
             <XCircle className="h-3 w-3" /> ERROR
           </span>
         );
       case 'ITERATION_RETRY':
         return (
-          <span className="inline-flex items-center gap-1 text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-amber-500/30">
+          <span className="inline-flex items-center gap-1 text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded text-[10px] font-mono border border-amber-500/40">
             <RefreshCw className="h-3 w-3 animate-spin" /> RETRY
+          </span>
+        );
+      case 'SANDBOX_START':
+      case 'SANDBOX_VERIFY':
+        return (
+          <span className="inline-flex items-center gap-1 text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded text-[10px] font-mono border border-cyan-500/40">
+            <Terminal className="h-3 w-3" /> SANDBOX
           </span>
         );
       case 'AI_THINKING':
       case 'AI_PROPOSAL':
         return (
-          <span className="inline-flex items-center gap-1 text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-blue-500/30">
-            <Sparkles className="h-3 w-3" /> VULTR AI
-          </span>
-        );
-      case 'SANDBOX_START':
-      case 'SANDBOX_RESULT':
-      case 'SANDBOX_VERIFY':
-      case 'SANDBOX_VERIFY_RESULT':
-        return (
-          <span className="inline-flex items-center gap-1 text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded text-[10px] font-mono border border-zinc-700/60">
-            <ShieldCheck className="h-3 w-3 text-zinc-400" /> SANDBOX
-          </span>
-        );
-      case 'PATCH_GENERATED':
-        return (
-          <span className="inline-flex items-center gap-1 text-violet-400 bg-violet-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-violet-500/30">
-            <Code2 className="h-3 w-3" /> PATCH
+          <span className="inline-flex items-center gap-1 text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded text-[10px] font-mono border border-blue-500/40">
+            <Cpu className="h-3 w-3" /> VULTR AI
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded text-[10px] font-mono border border-zinc-800">
+          <span className="inline-flex items-center gap-1 text-slate-300 bg-zinc-800 px-2 py-0.5 rounded text-[10px] font-mono border border-zinc-700">
             {step}
           </span>
         );
@@ -153,89 +149,97 @@ export default function ReasoningFeed({
   const isCalculator = selectedDemoObj?.id !== 'auth-sanitizer';
 
   return (
-    <aside className="w-full lg:w-[40%] xl:w-[38%] h-full flex flex-col bg-[#12131A] border-r border-zinc-800/80 overflow-hidden relative select-none">
-      {/* Top Header: Agent Pipeline Title & Iteration Counter */}
-      <div className="h-10 px-3.5 border-b border-zinc-800/80 bg-[#12131A] flex items-center justify-between gap-2 shrink-0">
+    <aside className="w-full lg:w-[42%] xl:w-[38%] h-full flex flex-col bg-[#12131A] border-r border-zinc-800 relative select-none">
+      {/* Top Header: Agent Pipeline Title & Filter Controls */}
+      <div className="h-11 px-4 border-b border-zinc-800 bg-[#0F1017] flex items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-zinc-200 tracking-tight font-sans">
-            Agent Pipeline
+          <span className="text-xs font-bold text-white tracking-tight font-sans">
+            Agent Reasoning Pipeline
           </span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
-            Iteration {iteration}/{maxIterations}
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700 text-slate-300 font-mono font-medium">
+            Turn {iteration}/{maxIterations}
           </span>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-1 text-[10px] font-mono">
+        {/* Tactile Solid Filter Tabs */}
+        <div className="flex items-center gap-1 text-[11px] font-mono">
           <button
             onClick={() => setFilter('ALL')}
-            className={`px-2 py-0.5 rounded transition-colors ${filter === 'ALL'
-                ? 'bg-zinc-800 text-zinc-100 font-medium'
-                : 'text-zinc-500 hover:text-zinc-300'
-              }`}
+            className={`px-2.5 py-1 rounded-md transition-colors ${
+              filter === 'ALL'
+                ? 'bg-zinc-800 text-white font-semibold border border-zinc-700'
+                : 'text-slate-400 hover:text-white hover:bg-zinc-850'
+            }`}
           >
             All
           </button>
           <button
             onClick={() => setFilter('AI')}
-            className={`px-2 py-0.5 rounded transition-colors ${filter === 'AI'
-                ? 'bg-zinc-800 text-zinc-100 font-medium'
-                : 'text-zinc-500 hover:text-zinc-300'
-              }`}
+            className={`px-2.5 py-1 rounded-md transition-colors ${
+              filter === 'AI'
+                ? 'bg-zinc-800 text-blue-300 font-semibold border border-zinc-700'
+                : 'text-slate-400 hover:text-white hover:bg-zinc-850'
+            }`}
           >
             AI
           </button>
           <button
             onClick={() => setFilter('SANDBOX')}
-            className={`px-2 py-0.5 rounded transition-colors ${filter === 'SANDBOX'
-                ? 'bg-zinc-800 text-zinc-100 font-medium'
-                : 'text-zinc-500 hover:text-zinc-300'
-              }`}
+            className={`px-2.5 py-1 rounded-md transition-colors ${
+              filter === 'SANDBOX'
+                ? 'bg-zinc-800 text-cyan-300 font-semibold border border-zinc-700'
+                : 'text-slate-400 hover:text-white hover:bg-zinc-850'
+            }`}
           >
             Sandbox
           </button>
         </div>
       </div>
 
-      {/* Sleek Horizontal Pipeline Stepper (Bolt.new style) */}
-      <div className="px-3.5 py-2.5 border-b border-zinc-800/80 bg-[#0F1017] shrink-0">
+      {/* Sleek Horizontal Pipeline Stepper */}
+      <div className="px-4 py-3 border-b border-zinc-800 bg-[#0E0F15] shrink-0">
         <div className="flex items-center justify-between text-xs font-mono">
           {steps.map((st, idx) => {
             const state = computeStepState(idx);
             const isLast = idx === steps.length - 1;
 
+            let badgeClass = 'bg-zinc-900 border-zinc-800 text-slate-400';
+            if (state === 'active') {
+              badgeClass = 'bg-blue-600 border-blue-400 text-white ring-2 ring-blue-500/50 shadow-md shadow-blue-500/30';
+            } else if (state === 'complete') {
+              badgeClass = 'bg-emerald-950 border-emerald-500/60 text-emerald-400 font-bold';
+            } else if (state === 'failed') {
+              badgeClass = 'bg-rose-950 border-rose-500/60 text-rose-400 font-bold';
+            }
+
             return (
               <React.Fragment key={idx}>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <div
-                    className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${state === 'complete'
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                        : state === 'active'
-                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40 ring-2 ring-blue-500/20'
-                          : state === 'failed'
-                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                            : 'bg-zinc-900 text-zinc-500 border border-zinc-800'
-                      }`}
+                    className={`h-5 w-5 rounded-full border flex items-center justify-center text-[10px] font-bold ${badgeClass}`}
                   >
                     {state === 'complete' ? (
-                      <CheckCircle2 className="h-3 w-3" />
+                      <Check className="h-3 w-3 stroke-[3]" />
                     ) : (
                       st.num
                     )}
                   </div>
                   <span
-                    className={`text-[11px] ${state === 'active'
-                        ? 'text-zinc-100 font-medium'
+                    className={`text-[11px] font-sans font-medium ${
+                      state === 'active'
+                        ? 'text-blue-400 font-bold'
                         : state === 'complete'
-                          ? 'text-zinc-300'
-                          : 'text-zinc-500'
-                      }`}
+                        ? 'text-emerald-400'
+                        : 'text-slate-400'
+                    }`}
                   >
                     {st.label}
                   </span>
                 </div>
                 {!isLast && (
-                  <div className="flex-1 mx-2 h-px bg-zinc-800" />
+                  <div className={`flex-1 mx-2 h-0.5 ${
+                    state === 'complete' ? 'bg-emerald-500/40' : 'bg-zinc-800'
+                  }`} />
                 )}
               </React.Fragment>
             );
@@ -244,93 +248,126 @@ export default function ReasoningFeed({
       </div>
 
       {/* Main Stream Area */}
-      <div ref={feedContainerRef} className="flex-1 overflow-y-auto p-3.5 space-y-3 font-mono text-xs">
+      <div ref={feedContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs">
         {filteredLogs.length === 0 ? (
-          /* IDLE STATE: GitHub-Style Issue Diagnostics */
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-semibold text-zinc-200 font-sans">
-                Diagnostic Findings
+          /* IDLE STATE: Unmissable Center CTA + GitHub-Style Issue Diagnostics */
+          <div className="space-y-4">
+            {/* 1. OBVIOUS CENTER CALL-TO-ACTION CARD */}
+            <div className="p-5 rounded-2xl bg-gradient-to-b from-blue-950/40 via-zinc-900 to-zinc-900 border-2 border-blue-500/50 shadow-2xl shadow-blue-500/10 text-center space-y-3.5">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-blue-500/30">
+                <Play className="h-6 w-6 fill-white ml-0.5" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-white font-sans tracking-tight">
+                  Ready for Autonomous Surgery
+                </h3>
+                <p className="text-xs text-slate-300 font-sans leading-relaxed max-w-sm mx-auto">
+                  Click here to spin up the Vultr sandbox, run tests, and heal broken code.
+                </p>
+              </div>
+
+              <motion.button
+                onClick={onStartSurgery}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 px-6 rounded-xl font-mono text-sm font-bold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 shadow-xl shadow-blue-500/30 ring-2 ring-blue-500/50 hover:ring-cyan-400 flex items-center justify-center gap-2.5 transition cursor-pointer"
+              >
+                <Play className="h-4 w-4 fill-white" />
+                <span>▶ Start Automated Repair</span>
+              </motion.button>
+            </div>
+
+            {/* 2. Diagnostic Findings Heading */}
+            <div className="flex items-center justify-between px-1 pt-1">
+              <span className="text-xs font-bold text-white font-sans uppercase tracking-wider">
+                Pre-Flight Defect Manifest
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                3 Failures Pending
+              <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 font-semibold">
+                {isCalculator ? '3 Logic Regressions' : '3 Security Vulnerabilities'}
               </span>
             </div>
 
+            {/* Issue Cards with High Contrast & Clear Typography */}
             {isCalculator ? (
               <>
                 {/* Issue Card 1 */}
-                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
-                        BUG-01
-                      </span>
-                      <span>Inverted Subtraction Operands</span>
-                    </div>
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
+                      BUG-01
+                    </span>
+                    <span>Inverted Subtraction Operands</span>
                   </div>
-                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                    Function returns <code className="text-rose-400 bg-rose-950/40 px-1 py-0.5 rounded text-[11px]">b - a</code> instead of <code className="text-emerald-400 bg-emerald-950/40 px-1 py-0.5 rounded text-[11px]">a - b</code>, failing subtraction test cases.
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    Function returns <code className="text-rose-300 bg-black/60 px-1.5 py-0.5 rounded border border-rose-500/30 font-mono text-[11px]">return b - a</code> instead of <code className="text-emerald-300 bg-black/60 px-1.5 py-0.5 rounded border border-emerald-500/30 font-mono text-[11px]">return a - b</code>, failing unit tests.
                   </p>
                 </div>
 
                 {/* Issue Card 2 */}
-                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
-                        BUG-02
-                      </span>
-                      <span>Missing Division Zero Guard</span>
-                    </div>
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
+                      BUG-02
+                    </span>
+                    <span>Missing Division Zero Exception Guard</span>
                   </div>
-                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                    Division does not check for <code className="text-zinc-200 bg-zinc-900 px-1 py-0.5 rounded text-[11px]">b == 0</code>, failing to raise required <code className="text-amber-400 bg-amber-950/40 px-1 py-0.5 rounded text-[11px]">ValueError</code> exception.
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    Division does not check <code className="text-zinc-200 bg-black/60 px-1.5 py-0.5 rounded border border-zinc-700 font-mono text-[11px]">b == 0</code>, failing to raise required <code className="text-amber-300 bg-black/60 px-1.5 py-0.5 rounded border border-amber-500/30 font-mono text-[11px]">ValueError</code> specification.
                   </p>
                 </div>
 
                 {/* Issue Card 3 */}
-                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
-                        BUG-03
-                      </span>
-                      <span>Off-by-One Exponent Calculation</span>
-                    </div>
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
+                      BUG-03
+                    </span>
+                    <span>Off-by-One Exponent Power Error</span>
                   </div>
-                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                    Exponent logic computes <code className="text-rose-400 bg-rose-950/40 px-1 py-0.5 rounded text-[11px]">a ** (b - 1)</code> instead of expected power <code className="text-emerald-400 bg-emerald-950/40 px-1 py-0.5 rounded text-[11px]">a ** b</code>.
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    Exponent logic computes <code className="text-rose-300 bg-black/60 px-1.5 py-0.5 rounded border border-rose-500/30 font-mono text-[11px]">return a ** (b - 1)</code> instead of expected <code className="text-emerald-300 bg-black/60 px-1.5 py-0.5 rounded border border-emerald-500/30 font-mono text-[11px]">return a ** b</code>.
                   </p>
                 </div>
               </>
             ) : (
               <>
-                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
-                        SEC-01
-                      </span>
-                      <span>Incomplete XSS Tag Sanitization</span>
-                    </div>
+                {/* Security Card 1 */}
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
+                      SEC-01
+                    </span>
+                    <span>Incomplete XSS Tag Stripping</span>
                   </div>
-                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                    Replaces only lowercase <code className="text-rose-400 bg-rose-950/40 px-1 py-0.5 rounded text-[11px]">&lt;script&gt;</code> without stripping closing tags or uppercase variants.
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    Replaces only lowercase <code className="text-rose-300 bg-black/60 px-1.5 py-0.5 rounded border border-rose-500/30 font-mono text-[11px]">&lt;script&gt;</code> without stripping closing tags or uppercase variants.
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
-                        SEC-02
-                      </span>
-                      <span>PCI-DSS Card Number Exposure</span>
-                    </div>
+                {/* Security Card 2 */}
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
+                      SEC-02
+                    </span>
+                    <span>PCI-DSS Card Number Masking Breach</span>
                   </div>
-                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                    Slice calculation exposes 5 digits instead of the 4-digit PCI compliance ceiling.
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    Off-by-one slice error exposes 5 digits instead of the strict PCI-DSS limit of 4 digits.
+                  </p>
+                </div>
+
+                {/* Security Card 3 */}
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
+                    <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
+                      SEC-03
+                    </span>
+                    <span>Overly Restrictive Username Filter</span>
+                  </div>
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed">
+                    Regex filter erroneously deletes valid underscore characters from usernames.
                   </p>
                 </div>
               </>
@@ -338,114 +375,91 @@ export default function ReasoningFeed({
           </div>
         ) : (
           /* ACTIVE LOG STREAM */
-          <AnimatePresence initial={false}>
+          <AnimatePresence>
             {filteredLogs.map((log, index) => {
               const isExpanded = expandedLogIdx === index;
-              const hasOutput = Boolean(log.payload?.output);
-              const hasResponse = Boolean(log.payload?.raw_response);
-              const latency = log.payload?.inference_telemetry?.latency_ms;
-              const linesAdded = log.payload?.stats?.lines_added;
-              const linesRemoved = log.payload?.stats?.lines_removed;
+              const hasResponse = !!log.payload?.raw_response;
+              const hasOutput = !!log.payload?.output;
+              const hasDetails = hasResponse || hasOutput;
 
               return (
                 <div
                   key={index}
-                  className={`rounded-xl border transition-colors overflow-hidden ${log.step === 'HEALED'
-                      ? 'bg-emerald-950/15 border-emerald-500/30'
-                      : log.step === 'ERROR'
-                        ? 'bg-rose-950/15 border-rose-500/30'
-                        : log.step === 'AI_PROPOSAL'
-                          ? 'bg-blue-950/15 border-blue-500/30'
-                          : 'bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700/80'
-                    }`}
+                  className="rounded-xl border border-zinc-800 bg-[#0F1017] overflow-hidden shadow-sm"
                 >
                   <div
-                    onClick={() => (hasOutput || hasResponse) && setExpandedLogIdx(isExpanded ? null : index)}
-                    className={`p-3 flex items-start justify-between gap-2.5 ${(hasOutput || hasResponse) ? 'cursor-pointer hover:bg-zinc-800/20' : ''
-                      }`}
+                    onClick={() => hasDetails && setExpandedLogIdx(isExpanded ? null : index)}
+                    className={`p-3.5 flex items-start justify-between gap-3 ${
+                      hasDetails ? 'cursor-pointer hover:bg-zinc-850/50' : ''
+                    }`}
                   >
                     <div className="flex items-start gap-2.5 min-w-0">
                       <div className="mt-0.5 shrink-0">{renderBadge(log.step)}</div>
-                      <div className="space-y-1 min-w-0">
-                        <div className="text-zinc-200 text-xs leading-snug font-sans">
+                      <div className="min-w-0">
+                        <p className="text-slate-200 font-sans text-xs leading-relaxed font-medium">
                           {log.message}
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
-                          {latency && (
-                            <span className="text-blue-400">
-                              {latency}ms
-                            </span>
-                          )}
-                          {linesAdded !== undefined && (
-                            <span className="text-emerald-400">
-                              +{linesAdded} / -{linesRemoved}
-                            </span>
-                          )}
-                          {log.payload?.iteration && (
-                            <span className="text-zinc-400">
-                              turn {log.payload.iteration}
-                            </span>
-                          )}
-                        </div>
+                        </p>
                       </div>
                     </div>
 
-                    {(hasOutput || hasResponse) && (
-                      <div className="shrink-0 text-zinc-500 hover:text-zinc-300 mt-1 transition-colors">
-                        <ChevronRight
-                          className={`h-3.5 w-3.5 transition-transform duration-150 ${isExpanded ? 'rotate-90 text-blue-400' : ''
-                            }`}
-                        />
+                    {hasDetails && (
+                      <div className="shrink-0 text-slate-400 hover:text-white mt-0.5">
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
                       </div>
                     )}
                   </div>
 
+                  {/* Expandable Trace / AI Response */}
                   <AnimatePresence>
                     {isExpanded && (
-                      <div className="border-t border-zinc-800/80 bg-zinc-950/70 p-3 space-y-2 text-[11px] overflow-hidden">
+                      <div className="border-t border-zinc-800 bg-[#05070F] p-3.5 space-y-3 text-xs overflow-hidden">
                         {hasResponse && (
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-blue-400 text-[10px] uppercase font-mono">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-blue-400 text-[11px] uppercase font-mono font-semibold">
                               <span>Vultr Llama 3.3 Reasoning & Code:</span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   copyText(log.payload.raw_response, `ai-${index}`);
                                 }}
-                                className="text-zinc-500 hover:text-zinc-200 transition-colors"
+                                className="text-slate-400 hover:text-white transition-colors"
                               >
                                 {copiedIdx === `ai-${index}` ? (
-                                  <Check className="h-3 w-3 text-emerald-400" />
+                                  <Check className="h-3.5 w-3.5 text-emerald-400" />
                                 ) : (
-                                  <Copy className="h-3 w-3" />
+                                  <Copy className="h-3.5 w-3.5" />
                                 )}
                               </button>
                             </div>
-                            <pre className="p-2.5 rounded-lg bg-black/60 border border-zinc-800/80 text-zinc-300 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed font-mono text-[11px]">
+                            <pre className="p-3 rounded-lg bg-black/80 border border-zinc-800 text-slate-200 whitespace-pre-wrap max-h-56 overflow-y-auto leading-relaxed font-mono text-[11px]">
                               {log.payload.raw_response}
                             </pre>
                           </div>
                         )}
 
                         {hasOutput && (
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-zinc-400 text-[10px] uppercase font-mono">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-cyan-400 text-[11px] uppercase font-mono font-semibold">
                               <span>Pytest Execution Trace:</span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   copyText(log.payload.output, `stdout-${index}`);
                                 }}
-                                className="text-zinc-500 hover:text-zinc-200 transition-colors"
+                                className="text-slate-400 hover:text-white transition-colors"
                               >
                                 {copiedIdx === `stdout-${index}` ? (
-                                  <Check className="h-3 w-3 text-emerald-400" />
+                                  <Check className="h-3.5 w-3.5 text-emerald-400" />
                                 ) : (
-                                  <Copy className="h-3 w-3" />
+                                  <Copy className="h-3.5 w-3.5" />
                                 )}
                               </button>
                             </div>
-                            <pre className="p-2.5 rounded-lg bg-black/60 border border-zinc-800/80 text-zinc-300 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed font-mono text-[11px]">
+                            <pre className="p-3 rounded-lg bg-black/80 border border-zinc-800 text-slate-200 whitespace-pre-wrap max-h-56 overflow-y-auto leading-relaxed font-mono text-[11px]">
                               {log.payload.output}
                             </pre>
                           </div>
@@ -460,15 +474,15 @@ export default function ReasoningFeed({
         )}
       </div>
 
-      {/* Bottom Elevated Action Box (Bolt.new Chat/Action Dock) */}
-      <div className="p-3 border-t border-zinc-800/80 bg-[#0F1017] shrink-0">
-        <div className="rounded-xl border border-zinc-800 bg-[#12131A] p-2 flex items-center justify-between gap-3 shadow-sm">
-          <div className="flex items-center gap-2 pl-2 text-xs font-sans text-zinc-400 truncate">
+      {/* Bottom Elevated Action Dock */}
+      <div className="p-3.5 border-t border-zinc-800 bg-[#0E0F15] shrink-0">
+        <div className="rounded-xl border border-zinc-750 bg-[#12131A] p-2.5 flex items-center justify-between gap-3 shadow-md">
+          <div className="flex items-center gap-2 pl-2 text-xs font-sans text-slate-300 truncate">
             <Sparkles className="h-4 w-4 text-blue-400 shrink-0" />
-            <span className="truncate">
+            <span className="truncate font-medium">
               {status === 'running'
-                ? 'Surgery in progress inside sandbox...'
-                : 'Autonomous multi-turn diagnosis & repair ready'}
+                ? 'Surgery active in isolated sandbox...'
+                : 'Vultr Llama 3.3 Autonomous Doctor Ready'}
             </span>
           </div>
 
@@ -476,11 +490,11 @@ export default function ReasoningFeed({
             onClick={onStartSurgery}
             disabled={status === 'running'}
             whileTap={{ scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-medium text-white transition shrink-0 disabled:opacity-50 ${status === 'running'
-                ? 'bg-zinc-800 cursor-not-allowed text-zinc-500'
-                : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:brightness-110 shadow-sm'
-              }`}
+            className={`px-5 py-2 rounded-lg font-mono text-xs font-bold text-white transition shrink-0 disabled:opacity-50 cursor-pointer ${
+              status === 'running'
+                ? 'bg-zinc-800 cursor-not-allowed text-slate-400'
+                : 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500 shadow-md shadow-blue-500/20'
+            }`}
           >
             {status === 'running' ? 'Operating...' : 'Execute Surgery'}
           </motion.button>
