@@ -27,8 +27,9 @@ export default function App() {
   const [isPROpen, setIsPROpen] = useState(false);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
 
-  // Repos / Scenarios
+  // Repos / Scenarios / GitHub URLs
   const [demos, setDemos] = useState([]);
+  const [repoUrl, setRepoUrl] = useState('https://github.com/i-m-champion/broken-calculator');
   const [repoName, setRepoName] = useState('broken-calculator');
   const [targetFile, setTargetFile] = useState('calculator.py');
   const [testCmd, setTestCmd] = useState('pytest -v');
@@ -58,20 +59,37 @@ export default function App() {
       .catch((err) => console.warn('Could not load demos from backend:', err));
   }, []);
 
-  const handleRepoChange = (selectedId) => {
-    setRepoName(selectedId);
-    const demo = demos.find((d) => d.id === selectedId);
-    if (demo) {
-      setTargetFile(demo.target_file || 'calculator.py');
-      setTestCmd(demo.test_command || 'pytest -v');
-    } else if (selectedId === 'auth-sanitizer') {
+  const handleRepoUrlChange = (url) => {
+    setRepoUrl(url);
+    const lower = url.toLowerCase();
+    if (lower.includes('sanitizer')) {
+      setRepoName('auth-sanitizer');
       setTargetFile('sanitizer.py');
       setTestCmd('pytest -v');
     } else {
+      setRepoName('broken-calculator');
+      setTargetFile('calculator.py');
+      setTestCmd('pytest -v');
+    }
+  };
+
+  const handleQuickFillSample = (scenario) => {
+    if (scenario === 'sanitizer' || scenario === 'auth-sanitizer') {
+      setRepoUrl('https://github.com/i-m-champion/auth-sanitizer');
+      setRepoName('auth-sanitizer');
+      setTargetFile('sanitizer.py');
+      setTestCmd('pytest -v');
+    } else {
+      setRepoUrl('https://github.com/i-m-champion/broken-calculator');
+      setRepoName('broken-calculator');
       setTargetFile('calculator.py');
       setTestCmd('pytest -v');
     }
     resetState();
+  };
+
+  const handleRepoChange = (selectedId) => {
+    handleQuickFillSample(selectedId);
   };
 
   const startSurgery = () => {
@@ -93,6 +111,7 @@ export default function App() {
     ws.onopen = () => {
       ws.send(
         JSON.stringify({
+          repo_url: repoUrl,
           repo_name: repoName,
           target_file: targetFile,
           test_command: testCmd,
@@ -190,12 +209,11 @@ export default function App() {
       {/* Background Micro Grid */}
       <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none z-0" />
 
-      {/* Top Sticky Bolt Navigation & Control Bar */}
+      {/* Top Sticky Bolt Navigation & Control Bar with Hero GitHub URL Bar */}
       <Header
         status={status}
-        repoName={repoName}
-        demos={demos}
-        onRepoChange={handleRepoChange}
+        repoUrl={repoUrl}
+        onRepoUrlChange={handleRepoUrlChange}
         targetFile={targetFile}
         onTargetFileChange={setTargetFile}
         testCmd={testCmd}
@@ -203,6 +221,7 @@ export default function App() {
         maxIterations={maxIterations}
         onMaxIterationsChange={setMaxIterations}
         iteration={iteration}
+        onQuickFillSample={handleQuickFillSample}
         onReset={resetState}
         onStartSurgery={startSurgery}
         onOpenAudit={() => setIsAuditOpen(true)}
@@ -222,6 +241,9 @@ export default function App() {
           maxIterations={maxIterations}
           selectedDemoObj={selectedDemoObj}
           testMetrics={testMetrics}
+          repoUrl={repoUrl}
+          targetFile={targetFile}
+          onQuickFillSample={handleQuickFillSample}
           onStartSurgery={startSurgery}
           onSelectScenario={handleRepoChange}
         />
@@ -236,10 +258,12 @@ export default function App() {
           telemetry={telemetry}
           testMetrics={testMetrics}
           repoName={repoName}
+          repoUrl={repoUrl}
           targetFile={targetFile}
           iteration={iteration}
           onOpenPR={() => setIsPROpen(true)}
           onOpenAudit={() => setIsAuditOpen(true)}
+          onQuickFillSample={handleQuickFillSample}
           onStartSurgery={startSurgery}
         />
       </section>

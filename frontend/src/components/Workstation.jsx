@@ -32,10 +32,12 @@ export default function Workstation({
   telemetry = null,
   testMetrics = null,
   repoName = 'broken-calculator',
+  repoUrl = 'https://github.com/i-m-champion/broken-calculator',
   targetFile = 'calculator.py',
   iteration = 1,
   onOpenPR,
   onOpenAudit,
+  onQuickFillSample,
   onStartSurgery
 }) {
   const [activeTab, setActiveTab] = useState(diff ? 'diff' : 'code');
@@ -381,26 +383,37 @@ export default function Workstation({
                 className="flex-1 p-4 overflow-y-auto space-y-3 font-mono text-xs"
               >
                 {sandboxOutputs.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3 font-sans">
+                  <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 font-sans">
                     <div className="h-12 w-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-cyan-400 mx-auto shadow-md">
                       <TerminalIcon className="h-6 w-6" />
                     </div>
-                    <div className="space-y-1">
-                      <p className="text-base text-white font-bold tracking-tight">Sandbox Terminal Idle</p>
-                      <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
-                        Pytest test runs, assertions, and verification traces inside the Vultr micro-sandbox will stream here in real-time.
+                    <div className="space-y-1.5 max-w-md mx-auto">
+                      <p className="text-base text-white font-bold tracking-tight">Target Repository Setup & Sandbox Terminal</p>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        Paste any public GitHub repository URL above, specify the target file & test command, and click Start Surgery to heal broken tests safely inside a Vultr micro-sandbox.
                       </p>
                     </div>
 
-                    {/* Quick Trigger Button in Terminal if user lands here first */}
-                    <button
-                      onClick={onStartSurgery}
-                      disabled={status === 'running'}
-                      className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-blue-500/20 cursor-pointer"
-                    >
-                      <Play className="h-3.5 w-3.5 fill-white" />
-                      <span>Execute Pytest & Surgery</span>
-                    </button>
+                    {/* Quick Trigger Buttons in Terminal */}
+                    <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+                      <button
+                        onClick={onStartSurgery}
+                        disabled={status === 'running'}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs font-bold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-blue-500 shadow-xl shadow-blue-500/25 cursor-pointer"
+                      >
+                        <Play className="h-3.5 w-3.5 fill-white" />
+                        <span>Start Surgery on GitHub Repo</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onQuickFillSample && onQuickFillSample('calculator')}
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-mono text-xs font-medium text-slate-200 bg-zinc-850 hover:bg-zinc-800 border border-zinc-700 transition cursor-pointer"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                        <span>Use Sample Demo Repo</span>
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   sandboxOutputs.map((item, idx) => (

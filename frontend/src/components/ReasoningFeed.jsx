@@ -27,6 +27,9 @@ export default function ReasoningFeed({
   iteration = 1,
   maxIterations = 3,
   selectedDemoObj,
+  repoUrl = 'https://github.com/i-m-champion/broken-calculator',
+  targetFile = 'calculator.py',
+  onQuickFillSample,
   onStartSurgery
 }) {
   const [filter, setFilter] = useState('ALL'); // ALL, AI, SANDBOX
@@ -250,32 +253,55 @@ export default function ReasoningFeed({
       {/* Main Stream Area */}
       <div ref={feedContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs">
         {filteredLogs.length === 0 ? (
-          /* IDLE STATE: Unmissable Center CTA + GitHub-Style Issue Diagnostics */
+          /* IDLE STATE: Sleek Target Repository Setup Card + Pre-flight Manifest */
           <div className="space-y-4">
-            {/* 1. OBVIOUS CENTER CALL-TO-ACTION CARD */}
+            {/* 1. TARGET REPOSITORY SETUP CARD */}
             <div className="p-5 rounded-2xl bg-gradient-to-b from-blue-950/40 via-zinc-900 to-zinc-900 border-2 border-blue-500/50 shadow-2xl shadow-blue-500/10 text-center space-y-3.5">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-blue-500/30">
-                <Play className="h-6 w-6 fill-white ml-0.5" />
+              <div className="h-11 w-11 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white mx-auto shadow-lg shadow-blue-500/30">
+                <Play className="h-5 w-5 fill-white ml-0.5" />
               </div>
 
               <div className="space-y-1">
                 <h3 className="text-base font-bold text-white font-sans tracking-tight">
-                  Ready for Autonomous Surgery
+                  Target Repository Setup
                 </h3>
                 <p className="text-xs text-slate-300 font-sans leading-relaxed max-w-sm mx-auto">
-                  Click here to spin up the Vultr sandbox, run tests, and heal broken code.
+                  Paste any public GitHub repository URL above, specify the target file & test command, and click Start Surgery to heal broken tests safely inside a Vultr micro-sandbox.
                 </p>
               </div>
 
-              <motion.button
-                onClick={onStartSurgery}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-3 px-6 rounded-xl font-mono text-sm font-bold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 shadow-xl shadow-blue-500/30 ring-2 ring-blue-500/50 hover:ring-cyan-400 flex items-center justify-center gap-2.5 transition cursor-pointer"
-              >
-                <Play className="h-4 w-4 fill-white" />
-                <span>▶ Start Automated Repair</span>
-              </motion.button>
+              {/* Active Target Banner */}
+              <div className="p-2.5 rounded-xl bg-black/60 border border-zinc-800 text-left font-mono text-xs space-y-1">
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Target Repo:</span>
+                  <span className="text-cyan-400 font-semibold">{targetFile}</span>
+                </div>
+                <div className="text-white truncate font-semibold text-xs">
+                  {repoUrl}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                <motion.button
+                  onClick={onStartSurgery}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 px-6 rounded-xl font-mono text-sm font-bold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 shadow-xl shadow-blue-500/30 ring-2 ring-blue-500/50 hover:ring-cyan-400 flex items-center justify-center gap-2.5 transition cursor-pointer"
+                >
+                  <Play className="h-4 w-4 fill-white" />
+                  <span>▶ Start Automated Repair</span>
+                </motion.button>
+
+                <button
+                  type="button"
+                  onClick={() => onQuickFillSample && onQuickFillSample('calculator')}
+                  className="w-full py-2 px-3 rounded-lg bg-zinc-800/80 hover:bg-zinc-750 text-slate-300 hover:text-white border border-zinc-700/80 text-xs font-mono flex items-center justify-center gap-2 transition cursor-pointer"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                  <span>Use Sample Demo Repo (Broken Calculator)</span>
+                </button>
+              </div>
             </div>
 
             {/* 2. Diagnostic Findings Heading */}
