@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
-import ContainmentCard from './components/ContainmentCard';
-import TerminalLogs from './components/TerminalLogs';
-import DiffViewer from './components/DiffViewer';
+import ReasoningFeed from './components/ReasoningFeed';
+import Workstation from './components/Workstation';
 import PullRequestModal from './components/PullRequestModal';
 import SecurityAuditModal from './components/SecurityAuditModal';
-import { Play, RotateCcw, FolderGit2, FileText, Terminal as TerminalIcon, ShieldAlert, Cpu, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
-  const [status, setStatus] = useState('idle'); // idle, running, healed, error
+  const [status, setStatus] = useState('idle'); // 'idle' | 'running' | 'healed' | 'error'
   const [logs, setLogs] = useState([]);
   const [diff, setDiff] = useState('');
   const [isHealed, setIsHealed] = useState(false);
@@ -24,15 +22,21 @@ export default function App() {
   const [isPROpen, setIsPROpen] = useState(false);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
 
-  // Demos
+  // Repos / Demos
   const [demos, setDemos] = useState([]);
   const [repoName, setRepoName] = useState('broken-calculator');
   const [targetFile, setTargetFile] = useState('calculator.py');
   const [testCmd, setTestCmd] = useState('pytest -v');
 
+  // Resolve API Base
+  const apiBase =
+    window.location.port === '3000'
+      ? ''
+      : `http://${window.location.hostname}:8001`;
+
   useEffect(() => {
     // Fetch available demo repositories from backend
-    fetch(`http://${window.location.hostname}:8001/api/demos`)
+    fetch(`${apiBase}/api/demos`)
       .then((res) => res.json())
       .then((data) => {
         if (data.demos && data.demos.length > 0) {
@@ -68,18 +72,24 @@ export default function App() {
     setPrData(null);
     setIteration(1);
 
-    // Establish WebSocket connection to backend
+    // Establish WebSocket connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:8001/ws/heal`;
+    const wsHost =
+      window.location.port === '3000'
+        ? window.location.host
+        : `${window.location.hostname}:8001`;
+    const wsUrl = `${protocol}//${wsHost}/ws/heal`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({
-        repo_name: repoName,
-        target_file: targetFile,
-        test_command: testCmd,
-        max_iterations: maxIterations
-      }));
+      ws.send(
+        JSON.stringify({
+          repo_name: repoName,
+          target_file: targetFile,
+          test_command: testCmd,
+          max_iterations: maxIterations
+        })
+      );
     };
 
     ws.onmessage = (event) => {
@@ -133,7 +143,8 @@ export default function App() {
         ...prev,
         {
           step: 'ERROR',
-          message: 'Unable to connect to RepoSurgeon backend (port 8001). Ensure the backend is running.'
+          message:
+            'Unable to connect to RepoSurgeon backend (port 8001). Please ensure backend is running.'
         }
       ]);
     };
@@ -155,8 +166,8 @@ export default function App() {
     setPrData(null);
     setIteration(1);
     try {
-      await fetch(`http://${window.location.hostname}:8001/api/demos/${repoName}/reset`, {
-        method: 'POST',
+      await fetch(`${apiBase}/api/demos/${repoName}/reset`, {
+        method: 'POST'
       });
     } catch (e) {
       console.warn('Could not reset demo repo on backend:', e);
@@ -166,133 +177,53 @@ export default function App() {
   const selectedDemoObj = demos.find((d) => d.id === repoName);
 
   return (
-    <div className="min-h-screen bg-[#070b14] flex flex-col text-slate-100 selection:bg-cyan-500 selection:text-black">
-      <Header status={status} />
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-950/20 via-[#07090e] to-[#04060a] relative text-slate-100 select-none">
+      {/* Background Dot Grid Overlay */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-25 pointer-events-none z-0" />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
-        {/* Repo Banner / Context Info */}
-        {selectedDemoObj && (
-          <div className="rounded-xl border border-slate-800/80 bg-gradient-to-r from-blue-950/20 via-slate-900/40 to-cyan-950/20 p-3.5 flex items-center justify-between flex-wrap gap-2 text-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="font-semibold text-cyan-400">Target Scenario:</span>
-              <span className="text-slate-300">{selectedDemoObj.description}</span>
-            </div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {(selectedDemoObj.tags || []).map((tag, idx) => (
-                <span key={idx} className="bg-slate-900 border border-slate-800 text-slate-400 px-2 py-0.5 rounded text-[10px] font-mono">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* Top Glassmorphism Navigation & Control Bar */}
+      <Header
+        status={status}
+        repoName={repoName}
+        demos={demos}
+        onRepoChange={handleRepoChange}
+        targetFile={targetFile}
+        onTargetFileChange={setTargetFile}
+        testCmd={testCmd}
+        onTestCmdChange={setTestCmd}
+        maxIterations={maxIterations}
+        onMaxIterationsChange={setMaxIterations}
+        iteration={iteration}
+        onReset={resetState}
+        onStartSurgery={startSurgery}
+        onOpenAudit={() => setIsAuditOpen(true)}
+      />
 
-        {/* Control Bar */}
-        <div className="rounded-xl border border-slate-800 bg-[#0d1326] p-4 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-wrap w-full md:w-auto">
-            {/* Repo Select */}
-            <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-lg text-xs">
-              <FolderGit2 className="h-4 w-4 text-cyan-400" />
-              <span className="text-slate-400">Target Repo:</span>
-              <select
-                value={repoName}
-                onChange={(e) => handleRepoChange(e.target.value)}
-                disabled={status === 'running'}
-                className="bg-transparent font-medium text-slate-200 outline-none cursor-pointer"
-              >
-                <option value="broken-calculator" className="bg-slate-900">broken-calculator (Arithmetic/Pytest)</option>
-                <option value="auth-sanitizer" className="bg-slate-900">auth-sanitizer (Security & SQL Injection)</option>
-              </select>
-            </div>
+      {/* Split Workbench Main Canvas (100% height minus header) */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full relative z-10">
+        {/* Left Panel (40% width): Agent Reasoning Loop & Task Stepper */}
+        <ReasoningFeed
+          logs={logs}
+          status={status}
+          iteration={iteration}
+          maxIterations={maxIterations}
+          selectedDemoObj={selectedDemoObj}
+          testMetrics={testMetrics}
+        />
 
-            {/* Target File */}
-            <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-lg text-xs">
-              <FileText className="h-4 w-4 text-blue-400" />
-              <span className="text-slate-400">File:</span>
-              <input
-                type="text"
-                value={targetFile}
-                onChange={(e) => setTargetFile(e.target.value)}
-                disabled={status === 'running'}
-                className="bg-transparent font-medium text-slate-200 outline-none w-28"
-              />
-            </div>
-
-            {/* Test Command */}
-            <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-lg text-xs">
-              <TerminalIcon className="h-4 w-4 text-emerald-400" />
-              <span className="text-slate-400">Command:</span>
-              <input
-                type="text"
-                value={testCmd}
-                onChange={(e) => setTestCmd(e.target.value)}
-                disabled={status === 'running'}
-                className="bg-transparent font-medium text-slate-200 outline-none w-24"
-              />
-            </div>
-
-            {/* Max Iterations */}
-            <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-2 rounded-lg text-xs">
-              <Sparkles className="h-4 w-4 text-purple-400" />
-              <span className="text-slate-400">Max Iterations:</span>
-              <select
-                value={maxIterations}
-                onChange={(e) => setMaxIterations(Number(e.target.value))}
-                disabled={status === 'running'}
-                className="bg-transparent font-medium text-slate-200 outline-none cursor-pointer"
-              >
-                <option value={1} className="bg-slate-900">1 (Single-Shot)</option>
-                <option value={2} className="bg-slate-900">2 (Refinement)</option>
-                <option value={3} className="bg-slate-900">3 (Autonomous Multi-Turn)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-            <button
-              onClick={resetState}
-              disabled={status === 'running'}
-              className="px-3.5 py-2 rounded-lg border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 text-xs font-medium flex items-center gap-1.5 transition"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Reset Broken State
-            </button>
-
-            <button
-              onClick={startSurgery}
-              disabled={status === 'running'}
-              className="px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-cyan-500/25 transition disabled:opacity-50"
-            >
-              <Play className="h-3.5 w-3.5 fill-white" />
-              {status === 'running' ? `Surgery in Sandbox (Attempt ${iteration}/${maxIterations})...` : 'Start Surgery (Auto-Heal)'}
-            </button>
-          </div>
-        </div>
-
-        {/* Workspace Panels */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column (Containment + Diff) */}
-          <div className="lg:col-span-5 space-y-6">
-            <ContainmentCard
-              telemetry={telemetry}
-              testMetrics={testMetrics}
-              onOpenAudit={() => setIsAuditOpen(true)}
-            />
-            <DiffViewer
-              diff={diff}
-              isHealed={isHealed}
-              stats={stats}
-              repoName={repoName}
-              onOpenPR={() => setIsPROpen(true)}
-            />
-          </div>
-
-          {/* Right Column (Terminal & Reasoning Stream) */}
-          <div className="lg:col-span-7">
-            <TerminalLogs logs={logs} />
-          </div>
-        </div>
-      </main>
+        {/* Right Panel (60% width): Dual-Tab Workstation */}
+        <Workstation
+          logs={logs}
+          diff={diff}
+          isHealed={isHealed}
+          stats={stats}
+          telemetry={telemetry}
+          testMetrics={testMetrics}
+          repoName={repoName}
+          onOpenPR={() => setIsPROpen(true)}
+          onOpenAudit={() => setIsAuditOpen(true)}
+        />
+      </div>
 
       {/* Modals */}
       <PullRequestModal
@@ -308,11 +239,6 @@ export default function App() {
         onClose={() => setIsAuditOpen(false)}
         auditData={auditData}
       />
-
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
-        Built for the <span className="text-cyan-400 font-medium">Vultr: Agent Rush Hackathon</span> (Blast Radius Zero Track) • Powered by <span className="text-blue-400 font-medium">Vultr Serverless Inference</span> & Docker Micro-Sandboxes
-      </footer>
     </div>
   );
 }

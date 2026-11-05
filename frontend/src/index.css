@@ -4,23 +4,52 @@
 
 @layer base {
   body {
-    background-color: #060913;
+    background-color: #04060a;
     color: #e2e8f0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
   }
 }
 
-/* Custom scrollbar for terminal logs */
+/* Background grid dots (Railway style) */
+.bg-grid-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom scrollbars for compact workbench */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b1120;
+  background: rgba(10, 13, 20, 0.4);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: rgba(51, 65, 85, 0.6);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: rgba(14, 165, 233, 0.5);
+}
+
+/* Radar pulse animation */
+@keyframes radar-ping {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+.animate-radar {
+  animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
