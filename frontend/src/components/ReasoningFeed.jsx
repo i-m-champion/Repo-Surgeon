@@ -217,15 +217,20 @@ export default function ReasoningFeed({
 
             return (
               <React.Fragment key={idx}>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <div
-                    className={`h-5 w-5 rounded-full border flex items-center justify-center text-[10px] font-bold ${badgeClass}`}
-                  >
-                    {state === 'complete' ? (
-                      <Check className="h-3 w-3 stroke-[3]" />
-                    ) : (
-                      st.num
+                <div className="flex items-center gap-1.5 shrink-0 relative">
+                  <div className="relative">
+                    {state === 'active' && (
+                      <span className="absolute -inset-1 rounded-full bg-blue-500/40 animate-ping pointer-events-none" />
                     )}
+                    <div
+                      className={`h-5 w-5 rounded-full border flex items-center justify-center text-[10px] font-bold relative z-10 ${badgeClass}`}
+                    >
+                      {state === 'complete' ? (
+                        <Check className="h-3 w-3 stroke-[3]" />
+                      ) : (
+                        st.num
+                      )}
+                    </div>
                   </div>
                   <span
                     className={`text-[11px] font-sans font-medium ${
@@ -318,7 +323,11 @@ export default function ReasoningFeed({
             {isCalculator ? (
               <>
                 {/* Issue Card 1 */}
-                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                <motion.div
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm cursor-pointer"
+                >
                   <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
                     <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
                       BUG-01
@@ -328,10 +337,14 @@ export default function ReasoningFeed({
                   <p className="text-xs text-slate-300 font-sans leading-relaxed">
                     Function returns <code className="text-rose-300 bg-black/60 px-1.5 py-0.5 rounded border border-rose-500/30 font-mono text-[11px]">return b - a</code> instead of <code className="text-emerald-300 bg-black/60 px-1.5 py-0.5 rounded border border-emerald-500/30 font-mono text-[11px]">return a - b</code>, failing unit tests.
                   </p>
-                </div>
+                </motion.div>
 
                 {/* Issue Card 2 */}
-                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                <motion.div
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm cursor-pointer"
+                >
                   <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
                     <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
                       BUG-02
@@ -341,10 +354,14 @@ export default function ReasoningFeed({
                   <p className="text-xs text-slate-300 font-sans leading-relaxed">
                     Division does not check <code className="text-zinc-200 bg-black/60 px-1.5 py-0.5 rounded border border-zinc-700 font-mono text-[11px]">b == 0</code>, failing to raise required <code className="text-amber-300 bg-black/60 px-1.5 py-0.5 rounded border border-amber-500/30 font-mono text-[11px]">ValueError</code> specification.
                   </p>
-                </div>
+                </motion.div>
 
                 {/* Issue Card 3 */}
-                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                <motion.div
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm cursor-pointer"
+                >
                   <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
                     <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
                       BUG-03
@@ -354,12 +371,16 @@ export default function ReasoningFeed({
                   <p className="text-xs text-slate-300 font-sans leading-relaxed">
                     Exponent logic computes <code className="text-rose-300 bg-black/60 px-1.5 py-0.5 rounded border border-rose-500/30 font-mono text-[11px]">return a ** (b - 1)</code> instead of expected <code className="text-emerald-300 bg-black/60 px-1.5 py-0.5 rounded border border-emerald-500/30 font-mono text-[11px]">return a ** b</code>.
                   </p>
-                </div>
+                </motion.div>
               </>
             ) : (
               <>
                 {/* Security Card 1 */}
-                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                <motion.div
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm cursor-pointer"
+                >
                   <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
                     <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
                       SEC-01
@@ -369,10 +390,14 @@ export default function ReasoningFeed({
                   <p className="text-xs text-slate-300 font-sans leading-relaxed">
                     Replaces only lowercase <code className="text-rose-300 bg-black/60 px-1.5 py-0.5 rounded border border-rose-500/30 font-mono text-[11px]">&lt;script&gt;</code> without stripping closing tags or uppercase variants.
                   </p>
-                </div>
+                </motion.div>
 
                 {/* Security Card 2 */}
-                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                <motion.div
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm cursor-pointer"
+                >
                   <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
                     <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
                       SEC-02
@@ -382,10 +407,14 @@ export default function ReasoningFeed({
                   <p className="text-xs text-slate-300 font-sans leading-relaxed">
                     Off-by-one slice error exposes 5 digits instead of the strict PCI-DSS limit of 4 digits.
                   </p>
-                </div>
+                </motion.div>
 
                 {/* Security Card 3 */}
-                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm">
+                <motion.div
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                  className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3.5 space-y-1.5 shadow-sm cursor-pointer"
+                >
                   <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
                     <span className="text-[11px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 font-mono text-rose-300 font-bold">
                       SEC-03
@@ -395,7 +424,7 @@ export default function ReasoningFeed({
                   <p className="text-xs text-slate-300 font-sans leading-relaxed">
                     Regex filter erroneously deletes valid underscore characters from usernames.
                   </p>
-                </div>
+                </motion.div>
               </>
             )}
           </div>

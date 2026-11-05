@@ -218,6 +218,9 @@ export default function App() {
       {/* Background Micro Grid */}
       <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none z-0" />
 
+      {/* Interactive Cursor Spotlight Glow */}
+      <div className="ambient-glow-cursor" />
+
       {/* 1. Clean, Minimal Bolt.new Header (like Photo 3) */}
       <Header onOpenAudit={() => setIsAuditOpen(true)} />
 

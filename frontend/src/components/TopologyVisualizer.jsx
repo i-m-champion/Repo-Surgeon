@@ -52,10 +52,15 @@ export default function TopologyVisualizer({ status, telemetry, repoName, iterat
         </div>
       </div>
 
-      {/* Connected Nodes */}
+      {/* Connected Nodes with Live Animated Energy Beams */}
       <div className="relative z-10 flex-1 my-6 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
         {/* Node 1: Vultr Serverless Inference */}
-        <div className="relative flex-1 min-w-[170px] p-4 rounded-xl bg-[#12131A] border border-zinc-800/80 flex flex-col items-center text-center space-y-2.5">
+        <motion.div
+          whileHover={{ y: -3, scale: 1.02 }}
+          animate={isRunning ? { scale: [1, 1.03, 1] } : {}}
+          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+          className="relative flex-1 min-w-[170px] p-4 rounded-xl bg-[#12131A] border border-zinc-800/80 flex flex-col items-center text-center space-y-2.5 shadow-sm"
+        >
           <div className="h-11 w-11 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-blue-400">
             <Cpu className="h-5 w-5" />
           </div>
@@ -67,33 +72,36 @@ export default function TopologyVisualizer({ status, telemetry, repoName, iterat
             <span>Latency</span>
             <span className="text-blue-400 font-semibold">~124ms</span>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Animated Connecting Pipeline 1 -> 2 */}
+        {/* Animated Connecting Energy Beam 1 -> 2 */}
         <div className="hidden sm:flex flex-col items-center justify-center flex-1 max-w-[120px] relative">
           <div className="h-0.5 w-full bg-zinc-800 relative overflow-hidden rounded-full">
-            {isRunning && (
-              <motion.div
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
-                className="absolute inset-0 bg-blue-500"
-              />
-            )}
+            <motion.div
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ repeat: Infinity, duration: isRunning ? 1.0 : 2.5, ease: 'linear' }}
+              className={`absolute inset-0 ${isRunning ? 'bg-cyan-400 shadow-[0_0_8px_#38bdf8]' : 'bg-blue-500/60'}`}
+            />
           </div>
-          <span className="text-[10px] font-mono text-zinc-500 mt-1 uppercase tracking-wider">
+          <span className="text-[10px] font-mono text-zinc-400 mt-1 uppercase tracking-wider">
             {isRunning ? 'Hotpatching...' : 'TLS Enclave'}
           </span>
         </div>
 
         {/* Node 2: Ephemeral Micro-Sandbox Boundary */}
-        <div className="relative flex-1 min-w-[210px] p-4 rounded-xl bg-[#12131A] border border-zinc-700/80 shadow-sm flex flex-col items-center text-center space-y-2.5">
+        <motion.div
+          whileHover={{ y: -3, scale: 1.02 }}
+          animate={isRunning ? { borderColor: ['rgba(59,130,246,0.4)', 'rgba(16,185,129,0.8)', 'rgba(59,130,246,0.4)'] } : {}}
+          transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+          className="relative flex-1 min-w-[210px] p-4 rounded-xl bg-[#12131A] border border-zinc-700/80 shadow-md flex flex-col items-center text-center space-y-2.5"
+        >
           <div className="h-12 w-12 rounded-lg bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div className="space-y-0.5">
             <div className="text-xs font-semibold text-zinc-100 font-mono flex items-center gap-1.5 justify-center">
               Micro-Sandbox
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
             <div className="text-[11px] text-emerald-400 font-mono font-medium">
               Blast Radius Zero
@@ -105,26 +113,27 @@ export default function TopologyVisualizer({ status, telemetry, repoName, iterat
             <div>Network: <strong className="text-amber-400">NONE</strong></div>
             <div>Auto-kill: <strong className="text-zinc-400">45s</strong></div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Animated Connecting Pipeline 2 -> 3 */}
+        {/* Animated Connecting Energy Beam 2 -> 3 */}
         <div className="hidden sm:flex flex-col items-center justify-center flex-1 max-w-[120px] relative">
           <div className="h-0.5 w-full bg-zinc-800 relative overflow-hidden rounded-full">
-            {isHealed && (
-              <motion.div
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                className="absolute inset-0 bg-emerald-500"
-              />
-            )}
+            <motion.div
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ repeat: Infinity, duration: isHealed ? 1.2 : 3.0, ease: 'linear' }}
+              className={`absolute inset-0 ${isHealed ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-zinc-600'}`}
+            />
           </div>
-          <span className="text-[10px] font-mono text-zinc-500 mt-1 uppercase tracking-wider">
-            {isHealed ? 'Verified' : 'Pytest Gate'}
+          <span className="text-[10px] font-mono text-zinc-400 mt-1 uppercase tracking-wider">
+            {isHealed ? 'Verified Green' : 'Pytest Gate'}
           </span>
         </div>
 
         {/* Node 3: Target Repository */}
-        <div className="relative flex-1 min-w-[170px] p-4 rounded-xl bg-[#12131A] border border-zinc-800/80 flex flex-col items-center text-center space-y-2.5">
+        <motion.div
+          whileHover={{ y: -3, scale: 1.02 }}
+          className="relative flex-1 min-w-[170px] p-4 rounded-xl bg-[#12131A] border border-zinc-800/80 flex flex-col items-center text-center space-y-2.5 shadow-sm"
+        >
           <div className="h-11 w-11 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-violet-400">
             <FolderGit2 className="h-5 w-5" />
           </div>
@@ -132,7 +141,7 @@ export default function TopologyVisualizer({ status, telemetry, repoName, iterat
             <div className="text-xs font-semibold text-zinc-200 font-mono truncate max-w-[140px]">
               {repoName}
             </div>
-            <div className={`text-[11px] font-mono ${isHealed ? 'text-emerald-400' : 'text-zinc-400'}`}>
+            <div className={`text-[11px] font-mono ${isHealed ? 'text-emerald-400 font-semibold' : 'text-zinc-400'}`}>
               {isHealed ? 'Clean / Healed' : 'Failing Baseline'}
             </div>
           </div>
@@ -140,7 +149,7 @@ export default function TopologyVisualizer({ status, telemetry, repoName, iterat
             <span>Isolation</span>
             <span className="text-emerald-400 font-medium">Guaranteed</span>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Bottom Telemetry Strip */}

@@ -38,10 +38,24 @@
   background: #3f3f46;
 }
 
-/* Subtle dot background grid (Muted Bolt Canvas) */
-.bolt-grid-pattern {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 20px 20px;
+/* Subtle dot background grid */
+.bolt-grid-pattern, .bg-grid-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Dynamic Interactive Cursor Ambient Spotlight */
+.ambient-glow-cursor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    650px circle at var(--mouse-x, 50vw) var(--mouse-y, 30vh),
+    rgba(59, 130, 246, 0.08),
+    transparent 65%
+  );
+  transition: opacity 0.3s ease;
 }
 
 /* Subtle pulse for active status dots */
@@ -51,13 +65,29 @@
     transform: scale(1);
   }
   50% {
-    opacity: 0.5;
-    transform: scale(0.9);
+    opacity: 0.45;
+    transform: scale(0.92);
   }
 }
 
 .animate-status-pulse {
   animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Shimmer animation for hero buttons and cards */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 4s infinite linear;
 }
 
 /* Monospace Code Styling */
