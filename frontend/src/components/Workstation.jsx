@@ -17,21 +17,25 @@ import {
   Flame,
   Activity,
   Layers,
-  ExternalLink
+  Server,
+  Network
 } from 'lucide-react';
+import TopologyVisualizer from './TopologyVisualizer';
 
 export default function Workstation({
   logs = [],
   diff = '',
+  status = 'idle',
   isHealed = false,
   stats = null,
   telemetry = null,
   testMetrics = null,
   repoName = 'broken-calculator',
+  iteration = 1,
   onOpenPR,
   onOpenAudit
 }) {
-  const [activeTab, setActiveTab] = useState('terminal'); // 'terminal' | 'diff'
+  const [activeTab, setActiveTab] = useState('terminal'); // 'terminal' | 'diff' | 'topology'
   const [autoScroll, setAutoScroll] = useState(true);
   const [copiedDiff, setCopiedDiff] = useState(false);
   const terminalEndRef = useRef(null);
@@ -50,7 +54,7 @@ export default function Workstation({
     }
   }, [logs, autoScroll, activeTab]);
 
-  // Extract all sandbox outputs combined or latest
+  // Extract all sandbox outputs
   const sandboxOutputs = logs
     .filter((l) => l.payload?.output)
     .map((l) => ({
@@ -190,6 +194,23 @@ export default function Workstation({
               </span>
             )}
           </button>
+
+          <button
+            onClick={() => setActiveTab('topology')}
+            className={`relative px-3 py-1.5 rounded-xl text-xs font-mono font-medium flex items-center gap-2 transition-all duration-200 z-10 ${
+              activeTab === 'topology' ? 'text-cyan-300' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            {activeTab === 'topology' && (
+              <motion.div
+                layoutId="workstationActiveTab"
+                className="absolute inset-0 rounded-xl bg-white/[0.08] border border-cyan-500/40 shadow-sm shadow-cyan-500/10 -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+            <Network className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="hidden sm:inline">Topology Canvas</span>
+          </button>
         </div>
 
         {/* Right: Pass Rate & Tab Actions */}
@@ -264,7 +285,7 @@ export default function Workstation({
                 </button>
               )}
             </div>
-          ) : (
+          ) : activeTab === 'terminal' ? (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setAutoScroll(!autoScroll)}
@@ -277,14 +298,30 @@ export default function Workstation({
                 Auto-scroll {autoScroll ? 'ON' : 'OFF'}
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* Main Workstation Viewport */}
       <div className="flex-1 overflow-hidden relative flex flex-col">
         <AnimatePresence mode="wait">
-          {activeTab === 'terminal' ? (
+          {activeTab === 'topology' ? (
+            <motion.div
+              key="topology"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex-1 p-4 overflow-y-auto"
+            >
+              <TopologyVisualizer
+                status={status}
+                telemetry={telemetry}
+                repoName={repoName}
+                iteration={iteration}
+              />
+            </motion.div>
+          ) : activeTab === 'terminal' ? (
             /* TAB 1: SANDBOX TERMINAL */
             <motion.div
               key="terminal"

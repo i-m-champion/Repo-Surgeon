@@ -233,11 +233,13 @@ export default function App() {
         <Workstation
           logs={logs}
           diff={diff}
+          status={status}
           isHealed={isHealed}
           stats={stats}
           telemetry={telemetry}
           testMetrics={testMetrics}
           repoName={repoName}
+          iteration={iteration}
           onOpenPR={() => setIsPROpen(true)}
           onOpenAudit={() => setIsAuditOpen(true)}
         />
