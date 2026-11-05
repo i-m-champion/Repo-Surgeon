@@ -4,8 +4,8 @@
 
 @layer base {
   html, body, #root {
-    background-color: #030509;
-    color: #e2e8f0;
+    background-color: #090A0F;
+    color: #F4F4F5;
     overflow: hidden;
     height: 100%;
     max-height: 100vh;
@@ -13,134 +13,51 @@
     max-width: 100vw;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Background grid dots with radial mask (Railway style) */
-.bg-grid-pattern {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
-  background-size: 24px 24px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, #000 40%, transparent 95%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, #000 40%, transparent 95%);
-}
-
-/* Ambient Cursor Spotlight Glow (Follows Mouse) */
-.ambient-glow-cursor {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    700px circle at var(--mouse-x, 50%) var(--mouse-y, 30%),
-    rgba(6, 182, 212, 0.08),
-    rgba(99, 102, 241, 0.04) 40%,
-    transparent 70%
-  );
-  z-index: 1;
-}
-
-/* Animated Border Beam */
-@keyframes border-beam-rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.border-beam-container {
-  position: relative;
-  overflow: hidden;
-}
-
-.border-beam-container::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(6, 182, 212, 0.6) 60deg,
-    rgba(99, 102, 241, 0.7) 120deg,
-    transparent 180deg
-  );
-  animation: border-beam-rotate 4s linear infinite;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* Glassmorphism Inner Card */
-.glass-panel {
-  background: rgba(10, 15, 26, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-.glass-card-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.glass-card-hover:hover {
-  border-color: rgba(6, 182, 212, 0.35);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 0 12px 30px -10px rgba(6, 182, 212, 0.15);
-  transform: translateY(-1px);
-}
-
-/* Custom Scrollbars */
+/* Bolt.new Minimal Zinc Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #27272a;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(6, 182, 212, 0.4);
+  background: #3f3f46;
 }
 
-/* Radar pulse animation */
-@keyframes radar-ripple {
-  0% {
-    transform: scale(0.85);
+/* Subtle dot background grid (Muted Bolt Canvas) */
+.bolt-grid-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Subtle pulse for active status dots */
+@keyframes status-pulse {
+  0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
-  100% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
-}
-
-.animate-radar-ring {
-  animation: radar-ripple 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* Shimmer animation for celebration & buttons */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
+  50% {
+    opacity: 0.5;
+    transform: scale(0.9);
   }
 }
 
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 3s infinite;
+.animate-status-pulse {
+  animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Monospace Code Styling */
+code, pre, kbd {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }

@@ -183,19 +183,11 @@ export default function App() {
   const selectedDemoObj = demos.find((d) => d.id === repoName);
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#030509] relative text-slate-100 select-none">
-      {/* Railway Ambient Gradient Orbs */}
-      <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[130px] pointer-events-none" />
-      <div className="absolute top-[30%] right-[10%] w-[450px] h-[450px] rounded-full bg-indigo-600/10 blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[40%] w-[600px] h-[400px] rounded-full bg-emerald-600/5 blur-[160px] pointer-events-none" />
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#090A0F] relative text-zinc-100 select-none">
+      {/* Background Micro Grid */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-15 pointer-events-none z-0" />
 
-      {/* Background Dot Grid with Edge Mask */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" />
-
-      {/* Interactive Cursor Spotlight Glow */}
-      <div className="ambient-glow-cursor" />
-
-      {/* Top Glassmorphic Navigation & Control Bar */}
+      {/* Top Bolt Navigation & Control Bar */}
       <Header
         status={status}
         repoName={repoName}
@@ -215,7 +207,7 @@ export default function App() {
 
       {/* Split Workbench Main Canvas (100% height minus header) */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full relative z-10">
-        {/* Left Panel (40% width): Agent Reasoning Loop & Task Stepper */}
+        {/* Left Panel (40% width): Bolt AI Agent Assistant Feed */}
         <ReasoningFeed
           logs={logs}
           status={status}
@@ -227,7 +219,7 @@ export default function App() {
           onSelectScenario={handleRepoChange}
         />
 
-        {/* Right Panel (60% width): Dual-Tab Workstation */}
+        {/* Right Panel (60% width): Bolt IDE Workstation */}
         <Workstation
           logs={logs}
           diff={diff}

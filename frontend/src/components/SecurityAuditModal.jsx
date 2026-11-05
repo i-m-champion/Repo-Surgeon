@@ -45,160 +45,130 @@ export default function SecurityAuditModal({ isOpen, onClose, auditData }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         />
 
         {/* Modal Card */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={{ opacity: 0, scale: 0.96, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0a0d18] p-6 shadow-2xl shadow-emerald-500/10 space-y-5 z-10 overflow-hidden"
+          exit={{ opacity: 0, scale: 0.96, y: 10 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          className="relative w-full max-w-2xl rounded-xl border border-zinc-800 bg-[#12131A] p-6 shadow-2xl space-y-5 z-10 overflow-hidden select-none"
         >
-          {/* Top glow line */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500" />
-
           {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-1 ring-white/20">
-                <ShieldCheck className="h-5 w-5 text-white" />
+              <div className="h-9 w-9 rounded-lg bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-white font-mono">
-                    Blast Radius Zero Security Audit
+                  <h3 className="text-sm font-semibold text-zinc-100 font-sans">
+                    Blast Radius Zero • Isolation Proof
                   </h3>
-                  <span className="text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-mono font-semibold">
-                    100% Contained
+                  <span className="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
+                    Enforced
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">
-                  Real-time micro-sandbox isolation parameters & host secret scrubbing verification
+                <p className="text-xs text-zinc-400 font-mono">
+                  Cryptographic verification of sandbox boundaries and zero host leak guarantee
                 </p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
+              className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Security Matrix Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            {/* Host Secret Hygiene */}
-            <div className="p-3.5 rounded-xl bg-[#060812] border border-white/10 space-y-1.5 shadow-inner">
-              <div className="flex items-center gap-2 text-cyan-400 font-mono font-semibold text-xs">
-                <EyeOff className="h-4 w-4" />
-                <span>Host Secret Hygiene</span>
-              </div>
-              <div className="text-slate-300 font-mono">
-                <span className="text-xl font-bold text-emerald-400">
-                  {data.secrets_scrubbed_count || 8}
-                </span>{' '}
-                <span className="text-slate-400 text-[11px]">Secrets Scrubbed</span>
-              </div>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {(data.secrets_scrubbed_sample || [
-                  'VULTR_API_KEY',
-                  'SSH_AUTH_SOCK',
-                  'GITHUB_TOKEN'
-                ]).map((s, idx) => (
-                  <span
-                    key={idx}
-                    className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-black/60 text-slate-400 border border-white/5"
-                  >
-                    {s}
-                  </span>
-                ))}
-              </div>
-            </div>
-
+          {/* Core Grid */}
+          <div className="grid grid-cols-2 gap-3">
             {/* Network Boundary */}
-            <div className="p-3.5 rounded-xl bg-[#060812] border border-white/10 space-y-1.5 shadow-inner">
-              <div className="flex items-center gap-2 text-amber-400 font-mono font-semibold text-xs">
-                <Lock className="h-4 w-4" />
-                <span>Network Quarantine</span>
+            <div className="p-3 bg-zinc-900/60 rounded-lg border border-zinc-800 space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-400">
+                <Lock className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Network Boundary</span>
               </div>
-              <div className="text-xs font-mono font-semibold text-amber-300">
-                {data.isolation_boundary || data.network_policy || 'Quarantined (0 egress)'}
+              <div className="text-xs font-semibold text-zinc-200 font-mono">
+                {data.network_policy}
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed font-mono">
-                Blocked egress: <strong className="text-emerald-400">{data.egress_attempts_blocked || 0}</strong> attempt(s) neutralized.
+              <p className="text-[10px] text-zinc-500 font-mono">
+                Socket connections strictly quarantined to local loopback
               </p>
             </div>
 
-            {/* Resource Caps */}
-            <div className="p-3.5 rounded-xl bg-[#060812] border border-white/10 space-y-1.5 shadow-inner">
-              <div className="flex items-center gap-2 text-purple-400 font-mono font-semibold text-xs">
-                <Zap className="h-4 w-4" />
-                <span>Cgroup Quota Bounds</span>
+            {/* Secret Hygiene */}
+            <div className="p-3 bg-zinc-900/60 rounded-lg border border-zinc-800 space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-400">
+                <EyeOff className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Secret Hygiene</span>
               </div>
-              <div className="text-slate-200 font-mono font-medium text-xs">
-                Peak: <span className="text-purple-300">{data.memory_peak_mb || 142} MB</span> • Quota: <span className="text-purple-300">{data.cpu_quota_enforced || '1.0 vCPU'}</span>
+              <div className="text-xs font-semibold text-emerald-400 font-mono">
+                {data.secrets_scrubbed_count} Secrets Scrubbed (0 Leaked)
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed font-mono">
-                Protected against infinite loops, fork bombs, and memory starvation.
+              <p className="text-[10px] text-zinc-500 font-mono">
+                Tokens stripped: {data.secrets_scrubbed_sample.slice(0, 3).join(', ')}...
               </p>
             </div>
 
-            {/* Ephemeral Workspace Wipe */}
-            <div className="p-3.5 rounded-xl bg-[#060812] border border-white/10 space-y-1.5 shadow-inner">
-              <div className="flex items-center gap-2 text-emerald-400 font-mono font-semibold text-xs">
-                <CheckCircle className="h-4 w-4" />
-                <span>Containment Integrity</span>
+            {/* Resource Governance */}
+            <div className="p-3 bg-zinc-900/60 rounded-lg border border-zinc-800 space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-400">
+                <Cpu className="h-3.5 w-3.5 text-blue-400" />
+                <span>Cgroup Quota Limits</span>
               </div>
-              <div className="text-emerald-300 font-mono text-xs font-bold truncate">
-                {data.containment_integrity || '100% SECURE - ZERO HOST LEAK'}
+              <div className="text-xs font-semibold text-zinc-200 font-mono">
+                RAM: {data.memory_limit} | CPU: {data.cpu_limit}
               </div>
-              <p className="text-[11px] text-emerald-400/90 leading-relaxed font-mono">
-                ✓ Host credentials exposed: <strong className="text-white">0</strong>
+              <p className="text-[10px] text-zinc-500 font-mono">
+                Auto-kill enforcement at {data.timeout} execution ceiling
+              </p>
+            </div>
+
+            {/* Privilege Isolation */}
+            <div className="p-3 bg-zinc-900/60 rounded-lg border border-zinc-800 space-y-1">
+              <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-400">
+                <Terminal className="h-3.5 w-3.5 text-blue-400" />
+                <span>Privilege Level</span>
+              </div>
+              <div className="text-xs font-semibold text-zinc-200 font-mono">
+                UID {data.sandbox_uid} • Root Denied
+              </div>
+              <p className="text-[10px] text-zinc-500 font-mono">
+                no-new-privileges flag active, read-only system mounts
               </p>
             </div>
           </div>
 
-          {/* Neutralized Threats Section */}
-          {data.threats_neutralized && data.threats_neutralized.length > 0 && (
-            <div className="p-3.5 rounded-xl bg-red-950/20 border border-red-500/30 space-y-2">
-              <div className="flex items-center gap-2 text-red-400 font-mono font-semibold text-xs">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                <span>Intercepted Attack Vectors (Neutralized In Sandbox)</span>
-              </div>
-              <div className="space-y-1 font-mono text-[11px]">
-                {data.threats_neutralized.map((threat, idx) => (
-                  <div key={idx} className="flex items-center gap-2 text-slate-300">
-                    <span className="text-emerald-400">✓</span>
-                    <span>{threat}</span>
-                  </div>
-                ))}
+          {/* Ephemeral Lifecycle Banner */}
+          <div className="p-3 rounded-lg bg-zinc-900/90 border border-zinc-800 flex items-center justify-between font-mono text-xs">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-emerald-400" />
+              <div>
+                <span className="text-zinc-300 font-medium block">
+                  Ephemeral Lifecycle: {data.post_execution_wipe}
+                </span>
+                <span className="text-[10px] text-zinc-500">
+                  Target workspace is instantly destroyed upon surgery completion
+                </span>
               </div>
             </div>
-          )}
-
-          {/* Non-Root Isolation Banner */}
-          <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-950/40 via-cyan-950/30 to-blue-950/40 border border-emerald-500/30 flex items-center justify-between text-xs font-mono">
-            <div className="flex items-center gap-2 text-emerald-300">
-              <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>
-                User Isolation: <strong className="text-white">sandboxuser (UID 10001)</strong>
-              </span>
-            </div>
-            <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 border border-emerald-500/40">
-              Root Denied
+            <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 text-[10px] border border-emerald-500/30">
+              Verified
             </span>
           </div>
 
-          {/* Footer */}
-          <div className="pt-2 flex justify-end">
+          {/* Close Action */}
+          <div className="pt-3 border-t border-zinc-800 flex justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/10 text-slate-200 text-xs font-mono font-semibold transition border border-white/10"
+              className="px-4 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-mono text-zinc-200 transition-colors border border-zinc-800"
             >
-              Close Audit
+              Dismiss
             </button>
           </div>
         </motion.div>

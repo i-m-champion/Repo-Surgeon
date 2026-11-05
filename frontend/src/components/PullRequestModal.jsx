@@ -45,144 +45,135 @@ export default function PullRequestModal({ isOpen, onClose, prData, diff, repoNa
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         />
 
         {/* Modal Card */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={{ opacity: 0, scale: 0.96, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0a0d18] p-6 shadow-2xl shadow-cyan-500/10 space-y-5 z-10 overflow-hidden"
+          exit={{ opacity: 0, scale: 0.96, y: 10 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          className="relative w-full max-w-2xl rounded-xl border border-zinc-800 bg-[#12131A] p-6 shadow-2xl space-y-5 z-10 overflow-hidden select-none"
         >
-          {/* Subtle top glow line */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-emerald-400" />
-
           {/* Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 ring-1 ring-white/20">
-                <GitPullRequest className="h-5 w-5 text-white" />
+              <div className="h-9 w-9 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-blue-400">
+                <GitPullRequest className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-white font-mono">
-                    1-Click Pull Request Ready
+                  <h3 className="text-sm font-semibold text-zinc-100 font-sans">
+                    1-Click Pull Request Bundle
                   </h3>
-                  <span className="text-[10px] bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono font-semibold">
-                    100% Green
+                  <span className="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
+                    Verified Green
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">
-                  Verified surgical patch ready to merge into upstream repository
+                <p className="text-xs text-zinc-400 font-mono">
+                  Autonomous surgical patch ready for upstream review
                 </p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition"
+              className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/80 transition-colors"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
           {/* PR Details */}
-          <div className="space-y-3.5 text-xs">
-            {/* Branch */}
+          <div className="space-y-4">
+            {/* PR Title */}
             <div>
-              <label className="text-slate-400 font-mono text-[11px] mb-1.5 block">
-                Suggested Git Branch
-              </label>
-              <div className="flex items-center justify-between bg-[#05070f] border border-white/10 px-3 py-2 rounded-xl font-mono text-cyan-300 shadow-inner">
-                <span className="truncate mr-2">{prData.branch}</span>
+              <div className="flex items-center justify-between text-xs text-zinc-400 mb-1.5 font-mono">
+                <span>PR Title</span>
                 <button
-                  onClick={() => copyToClipboard(prData.branch, 'branch')}
-                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition shrink-0"
+                  onClick={() => copyToClipboard(prData.title, 'title')}
+                  className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition-colors"
                 >
-                  {copiedField === 'branch' ? (
-                    <Check className="h-4 w-4 text-emerald-400" />
+                  {copiedField === 'title' ? (
+                    <>
+                      <Check className="h-3 w-3 text-emerald-400" />
+                      <span className="text-emerald-400">Copied</span>
+                    </>
                   ) : (
-                    <Copy className="h-4 w-4" />
+                    <>
+                      <Copy className="h-3 w-3" />
+                      <span>Copy</span>
+                    </>
                   )}
                 </button>
+              </div>
+              <div className="p-3 bg-zinc-900/90 rounded-lg border border-zinc-800 font-mono text-xs text-zinc-200">
+                {prData.title}
               </div>
             </div>
 
-            {/* Commit Message */}
-            <div>
-              <label className="text-slate-400 font-mono text-[11px] mb-1.5 block">
-                Generated Commit Message
-              </label>
-              <div className="flex items-center justify-between bg-[#05070f] border border-white/10 px-3 py-2 rounded-xl font-mono text-slate-200 shadow-inner">
-                <span className="truncate mr-2">
-                  {prData.commit_message?.split('\n')[0]}
+            {/* Target Branch & Files */}
+            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+              <div className="p-3 bg-zinc-900/60 rounded-lg border border-zinc-800">
+                <span className="text-zinc-500 block text-[11px] mb-1">Target Branch</span>
+                <span className="text-blue-400 font-semibold">{prData.branch}</span>
+              </div>
+              <div className="p-3 bg-zinc-900/60 rounded-lg border border-zinc-800">
+                <span className="text-zinc-500 block text-[11px] mb-1">Files Changed</span>
+                <span className="text-zinc-200 font-semibold">
+                  {prData.files_changed ? prData.files_changed.join(', ') : '1 file'}
                 </span>
-                <button
-                  onClick={() => copyToClipboard(prData.commit_message, 'commit')}
-                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition shrink-0"
-                >
-                  {copiedField === 'commit' ? (
-                    <Check className="h-4 w-4 text-emerald-400" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </button>
               </div>
             </div>
 
-            {/* Apply via Git */}
+            {/* Description Body */}
             <div>
-              <label className="text-slate-400 font-mono text-[11px] mb-1.5 block">
-                Apply Locally via Git CLI
-              </label>
-              <div className="flex items-center justify-between bg-[#04060b] border border-emerald-500/30 px-3 py-2 rounded-xl font-mono text-emerald-300 shadow-inner">
-                <span className="truncate mr-2">
-                  git apply reposurgeon-{repoName || 'fix'}.patch
-                </span>
+              <div className="flex items-center justify-between text-xs text-zinc-400 mb-1.5 font-mono">
+                <span>PR Description (Markdown)</span>
                 <button
-                  onClick={() =>
-                    copyToClipboard(
-                      `git apply reposurgeon-${repoName || 'fix'}.patch`,
-                      'apply'
-                    )
-                  }
-                  className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition shrink-0"
+                  onClick={() => copyToClipboard(prData.body, 'body')}
+                  className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition-colors"
                 >
-                  {copiedField === 'apply' ? (
-                    <Check className="h-4 w-4 text-emerald-400" />
+                  {copiedField === 'body' ? (
+                    <>
+                      <Check className="h-3 w-3 text-emerald-400" />
+                      <span className="text-emerald-400">Copied</span>
+                    </>
                   ) : (
-                    <Copy className="h-4 w-4" />
+                    <>
+                      <Copy className="h-3 w-3" />
+                      <span>Copy Markdown</span>
+                    </>
                   )}
                 </button>
               </div>
+              <pre className="p-3 bg-zinc-900/90 rounded-lg border border-zinc-800 font-mono text-xs text-zinc-300 max-h-44 overflow-y-auto whitespace-pre-wrap select-text">
+                {prData.body}
+              </pre>
             </div>
           </div>
 
-          {/* Footer Actions */}
-          <div className="pt-3 border-t border-white/10 flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
-              <ShieldCheck className="h-4 w-4" />
-              <span>Blast Radius Zero Certified</span>
-            </div>
+          {/* Action Footer */}
+          <div className="pt-3 border-t border-zinc-800 flex items-center justify-between">
+            <button
+              onClick={downloadPatch}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-800 bg-zinc-900 text-xs font-mono text-zinc-300 hover:text-white hover:bg-zinc-850 transition-colors"
+            >
+              <Download className="h-3.5 w-3.5 text-blue-400" />
+              <span>Download .patch File</span>
+            </button>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={downloadPatch}
-                className="px-3.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/10 text-slate-200 text-xs font-mono font-medium flex items-center gap-1.5 border border-white/10 transition"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span>Download .patch</span>
-              </button>
-              <button
-                onClick={() => copyToClipboard(diff, 'diff')}
-                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-mono font-semibold flex items-center gap-1.5 shadow-lg shadow-cyan-500/25 transition"
-              >
-                <Copy className="h-3.5 w-3.5" />
-                <span>{copiedField === 'diff' ? 'Diff Copied!' : 'Copy Unified Diff'}</span>
-              </button>
-            </div>
+            <button
+              onClick={() => {
+                copyToClipboard(prData.body, 'all');
+                onClose();
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 text-xs font-mono font-medium text-white hover:brightness-110 transition shadow-sm"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              <span>Copy Full PR Details</span>
+            </button>
           </div>
         </motion.div>
       </div>

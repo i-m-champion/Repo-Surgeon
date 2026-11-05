@@ -10,17 +10,11 @@ import {
   Cpu,
   ChevronRight,
   Code2,
-  Bug,
   Copy,
   Check,
-  Zap,
-  ArrowRight,
-  Layers,
-  FileText,
   Play,
-  Lock,
-  Flame,
-  AlertTriangle
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 
 export default function ReasoningFeed({
@@ -29,9 +23,7 @@ export default function ReasoningFeed({
   iteration = 1,
   maxIterations = 3,
   selectedDemoObj,
-  testMetrics,
-  onStartSurgery,
-  onSelectScenario
+  onStartSurgery
 }) {
   const [filter, setFilter] = useState('ALL'); // ALL, AI, SANDBOX
   const [expandedLogIdx, setExpandedLogIdx] = useState(null);
@@ -44,7 +36,7 @@ export default function ReasoningFeed({
     }
   }, [logs]);
 
-  // Determine stage progress for the visual stepper
+  // Determine stage progress for the compact step tracker
   const computeStepState = (stepIndex) => {
     if (status === 'idle') return 'idle';
 
@@ -84,10 +76,10 @@ export default function ReasoningFeed({
   };
 
   const steps = [
-    { title: 'Diagnose', desc: 'Pytest Suite' },
-    { title: 'Vultr AI', desc: 'Llama 3.3 70B' },
-    { title: 'Hotpatch', desc: 'Micro-Sandbox' },
-    { title: 'Verified', desc: 'Zero Regression' }
+    { label: 'Diagnose', num: '1' },
+    { label: 'Analyze', num: '2' },
+    { label: 'Hotpatch', num: '3' },
+    { label: 'Verify', num: '4' }
   ];
 
   const filteredLogs = logs.filter((log) => {
@@ -111,27 +103,27 @@ export default function ReasoningFeed({
       case 'HEALED':
       case 'SUCCESS':
         return (
-          <span className="inline-flex items-center gap-1 text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]">
-            <CheckCircle2 className="h-3 w-3 text-emerald-400" /> HEALED
+          <span className="inline-flex items-center gap-1 text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-emerald-500/30">
+            <CheckCircle2 className="h-3 w-3" /> HEALED
           </span>
         );
       case 'ERROR':
         return (
-          <span className="inline-flex items-center gap-1 text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-rose-500/50">
-            <XCircle className="h-3 w-3 text-rose-400" /> ERROR
+          <span className="inline-flex items-center gap-1 text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-rose-500/30">
+            <XCircle className="h-3 w-3" /> ERROR
           </span>
         );
       case 'ITERATION_RETRY':
         return (
-          <span className="inline-flex items-center gap-1 text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-amber-500/50">
-            <RefreshCw className="h-3 w-3 animate-spin text-amber-400" /> RETRY
+          <span className="inline-flex items-center gap-1 text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-amber-500/30">
+            <RefreshCw className="h-3 w-3 animate-spin" /> RETRY
           </span>
         );
       case 'AI_THINKING':
       case 'AI_PROPOSAL':
         return (
-          <span className="inline-flex items-center gap-1 text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
-            <Sparkles className="h-3 w-3 text-cyan-400" /> VULTR AI
+          <span className="inline-flex items-center gap-1 text-blue-400 bg-blue-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-blue-500/30">
+            <Sparkles className="h-3 w-3" /> VULTR AI
           </span>
         );
       case 'SANDBOX_START':
@@ -139,19 +131,19 @@ export default function ReasoningFeed({
       case 'SANDBOX_VERIFY':
       case 'SANDBOX_VERIFY_RESULT':
         return (
-          <span className="inline-flex items-center gap-1 text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-blue-500/50">
-            <ShieldCheck className="h-3 w-3 text-blue-400" /> SANDBOX
+          <span className="inline-flex items-center gap-1 text-zinc-300 bg-zinc-900 px-2 py-0.5 rounded text-[10px] font-mono border border-zinc-700/60">
+            <ShieldCheck className="h-3 w-3 text-zinc-400" /> SANDBOX
           </span>
         );
       case 'PATCH_GENERATED':
         return (
-          <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-purple-500/50">
-            <Code2 className="h-3 w-3 text-purple-400" /> PATCH
+          <span className="inline-flex items-center gap-1 text-violet-400 bg-violet-950/40 px-2 py-0.5 rounded text-[10px] font-mono border border-violet-500/30">
+            <Code2 className="h-3 w-3" /> PATCH
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-white/10">
+          <span className="inline-flex items-center text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded text-[10px] font-mono border border-zinc-800">
             {step}
           </span>
         );
@@ -161,53 +153,46 @@ export default function ReasoningFeed({
   const isCalculator = selectedDemoObj?.id !== 'auth-sanitizer';
 
   return (
-    <aside className="w-full lg:w-[40%] xl:w-[38%] h-full flex flex-col bg-[#05070f]/90 border-r border-white/[0.08] overflow-hidden relative select-none">
-      {/* Top Header Bar */}
-      <div className="p-3 border-b border-white/[0.08] bg-[#070b16]/70 flex items-center justify-between gap-2 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shadow-sm shadow-cyan-500/10">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 font-mono">
-              Agent Reasoning Feed
-            </h2>
-            <div className="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
-              <span className="text-cyan-400 font-semibold">Iteration {iteration}/{maxIterations}</span>
-              <span>•</span>
-              <span className="text-slate-400">Vultr Serverless Inference</span>
-            </div>
-          </div>
+    <aside className="w-full lg:w-[40%] xl:w-[38%] h-full flex flex-col bg-[#12131A] border-r border-zinc-800/80 overflow-hidden relative select-none">
+      {/* Top Header: Agent Pipeline Title & Iteration Counter */}
+      <div className="h-10 px-3.5 border-b border-zinc-800/80 bg-[#12131A] flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-zinc-200 tracking-tight font-sans">
+            Agent Pipeline
+          </span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
+            Iteration {iteration}/{maxIterations}
+          </span>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1 bg-[#03050a] p-0.5 rounded-xl border border-white/10 text-[10px]">
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-1 text-[10px] font-mono">
           <button
             onClick={() => setFilter('ALL')}
-            className={`px-2 py-0.5 rounded-lg font-mono transition-all duration-200 ${
+            className={`px-2 py-0.5 rounded transition-colors ${
               filter === 'ALL'
-                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-zinc-800 text-zinc-100 font-medium'
+                : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            All ({logs.length})
+            All
           </button>
           <button
             onClick={() => setFilter('AI')}
-            className={`px-2 py-0.5 rounded-lg font-mono transition-all duration-200 ${
+            className={`px-2 py-0.5 rounded transition-colors ${
               filter === 'AI'
-                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-zinc-800 text-zinc-100 font-medium'
+                : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             AI
           </button>
           <button
             onClick={() => setFilter('SANDBOX')}
-            className={`px-2 py-0.5 rounded-lg font-mono transition-all duration-200 ${
+            className={`px-2 py-0.5 rounded transition-colors ${
               filter === 'SANDBOX'
-                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                ? 'bg-zinc-800 text-zinc-100 font-medium'
+                : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             Sandbox
@@ -215,209 +200,149 @@ export default function ReasoningFeed({
         </div>
       </div>
 
-      {/* Visual Stepper: Railway / Bolt.new Style Connected Pipeline */}
-      <div className="p-3 border-b border-white/[0.08] bg-[#070b18]/40 shrink-0">
-        <div className="grid grid-cols-4 gap-2 relative">
+      {/* Sleek Horizontal Pipeline Stepper (Bolt.new style) */}
+      <div className="px-3.5 py-2.5 border-b border-zinc-800/80 bg-[#0F1017] shrink-0">
+        <div className="flex items-center justify-between text-xs font-mono">
           {steps.map((st, idx) => {
             const state = computeStepState(idx);
+            const isLast = idx === steps.length - 1;
+
             return (
-              <div
-                key={idx}
-                className={`relative p-2 rounded-xl border text-left transition-all duration-300 flex flex-col justify-between ${
-                  state === 'complete'
-                    ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                    : state === 'active'
-                    ? 'bg-cyan-950/30 border-cyan-400/60 text-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.25)]'
-                    : state === 'failed'
-                    ? 'bg-rose-950/20 border-rose-500/40 text-rose-300'
-                    : 'bg-white/[0.02] border-white/5 text-slate-500'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] font-mono font-bold tracking-wider">
-                    0{idx + 1}
+              <React.Fragment key={idx}>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
+                      state === 'complete'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                        : state === 'active'
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40 ring-2 ring-blue-500/20'
+                        : state === 'failed'
+                        ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                        : 'bg-zinc-900 text-zinc-500 border border-zinc-800'
+                    }`}
+                  >
+                    {state === 'complete' ? (
+                      <CheckCircle2 className="h-3 w-3" />
+                    ) : (
+                      st.num
+                    )}
+                  </div>
+                  <span
+                    className={`text-[11px] ${
+                      state === 'active'
+                        ? 'text-zinc-100 font-medium'
+                        : state === 'complete'
+                        ? 'text-zinc-300'
+                        : 'text-zinc-500'
+                    }`}
+                  >
+                    {st.label}
                   </span>
-                  {state === 'complete' && (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                  )}
-                  {state === 'active' && (
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-radar-ring absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
-                    </span>
-                  )}
-                  {state === 'failed' && (
-                    <XCircle className="h-3.5 w-3.5 text-rose-400" />
-                  )}
-                  {state === 'pending' && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-slate-700" />
-                  )}
                 </div>
-                <div>
-                  <div className="font-mono text-[11px] font-bold leading-tight truncate">
-                    {st.title}
-                  </div>
-                  <div className="text-[9px] text-slate-400 truncate mt-0.5">
-                    {st.desc}
-                  </div>
-                </div>
-              </div>
+                {!isLast && (
+                  <div className="flex-1 mx-2 h-px bg-zinc-800" />
+                )}
+              </React.Fragment>
             );
           })}
         </div>
       </div>
 
-      {/* Target Scenario Context Banner */}
-      {selectedDemoObj && (
-        <div className="px-3 py-2 border-b border-white/[0.05] bg-[#080d1e]/30 flex items-center justify-between text-[11px] shrink-0">
-          <div className="flex items-center gap-2 truncate text-slate-300">
-            <Bug className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
-            <span className="text-slate-400 font-mono text-[10px]">SCENARIO:</span>
-            <span className="truncate text-slate-200 font-medium">{selectedDemoObj.description}</span>
-          </div>
-          <div className="flex items-center gap-1 shrink-0 ml-2">
-            {(selectedDemoObj.tags || []).slice(0, 2).map((t, i) => (
-              <span
-                key={i}
-                className="px-2 py-0.5 rounded-full bg-[#0a0f20] border border-white/10 text-slate-400 text-[9px] font-mono"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Feed Area: When Idle, Show Rich Pre-flight Manifest; When Running, Stream Logs */}
-      <div ref={feedContainerRef} className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
+      {/* Main Stream Area */}
+      <div ref={feedContainerRef} className="flex-1 overflow-y-auto p-3.5 space-y-3 font-mono text-xs">
         {filteredLogs.length === 0 ? (
-          /* RICH PRE-FLIGHT DIAGNOSTIC MANIFEST (Replaces the empty void!) */
-          <div className="space-y-3.5 animate-in fade-in duration-300">
-            {/* Surgery Briefing Card */}
-            <div className="p-3.5 rounded-2xl bg-[#080c1a] border border-cyan-500/20 shadow-xl space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-                    <FileText className="h-3.5 w-3.5" />
-                  </span>
-                  <span className="text-xs font-bold text-white font-mono">
-                    Pre-Flight Surgical Diagnosis
-                  </span>
+          /* IDLE STATE: GitHub-Style Issue Diagnostics */
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-semibold text-zinc-200 font-sans">
+                Diagnostic Findings
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                3 Failures Pending
+              </span>
+            </div>
+
+            {isCalculator ? (
+              <>
+                {/* Issue Card 1 */}
+                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
+                        BUG-01
+                      </span>
+                      <span>Inverted Subtraction Operands</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                    Function returns <code className="text-rose-400 bg-rose-950/40 px-1 py-0.5 rounded text-[11px]">b - a</code> instead of <code className="text-emerald-400 bg-emerald-950/40 px-1 py-0.5 rounded text-[11px]">a - b</code>, failing subtraction test cases.
+                  </p>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-mono font-semibold">
-                  3 Critical Bugs
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-                Pytest baseline suite contains failing logic and boundary assertions. RepoSurgeon is ready to isolate execution inside the Vultr micro-sandbox.
-              </p>
-            </div>
 
-            {/* Bug Manifest Items */}
-            <div className="space-y-2">
-              <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider px-1">
-                Detected Bug Manifest:
-              </div>
-
-              {isCalculator ? (
-                <>
-                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
-                      <span>01. Inverted Subtraction</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">subtract(a, b)</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      Returns <code className="text-rose-400">b - a</code> instead of <code className="text-emerald-400">a - b</code>, causing negative difference assertions to fail.
+                {/* Issue Card 2 */}
+                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
+                        BUG-02
+                      </span>
+                      <span>Missing Division Zero Guard</span>
                     </div>
                   </div>
+                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                    Division does not check for <code className="text-zinc-200 bg-zinc-900 px-1 py-0.5 rounded text-[11px]">b == 0</code>, failing to raise required <code className="text-amber-400 bg-amber-950/40 px-1 py-0.5 rounded text-[11px]">ValueError</code> exception.
+                  </p>
+                </div>
 
-                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
-                      <span>02. Missing ZeroDivisionError Guard</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">divide(a, b)</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      Fails to raise <code className="text-amber-300">ValueError("Cannot divide by zero")</code> on <code className="text-rose-400">b == 0</code>.
+                {/* Issue Card 3 */}
+                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
+                        BUG-03
+                      </span>
+                      <span>Off-by-One Exponent Calculation</span>
                     </div>
                   </div>
-
-                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
-                      <span>03. Off-By-One Exponent</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">power(a, b)</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      Returns <code className="text-rose-400">a ** (b - 1)</code> instead of <code className="text-emerald-400">a ** b</code>.
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
-                      <span>01. Incomplete XSS Sanitization</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">sanitize_input()</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      Only replaces exact lowercase <code className="text-rose-400">&lt;script&gt;</code> string, leaving uppercase & closing tags intact.
+                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                    Exponent logic computes <code className="text-rose-400 bg-rose-950/40 px-1 py-0.5 rounded text-[11px]">a ** (b - 1)</code> instead of expected power <code className="text-emerald-400 bg-emerald-950/40 px-1 py-0.5 rounded text-[11px]">a ** b</code>.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
+                        SEC-01
+                      </span>
+                      <span>Incomplete XSS Tag Sanitization</span>
                     </div>
                   </div>
+                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                    Replaces only lowercase <code className="text-rose-400 bg-rose-950/40 px-1 py-0.5 rounded text-[11px]">&lt;script&gt;</code> without stripping closing tags or uppercase variants.
+                  </p>
+                </div>
 
-                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
-                      <span>02. PCI-DSS Credit Card Exposure</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">mask_credit_card()</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      Off-by-one slice error exposing 5 digits instead of the required 4 digits.
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
-                      <span>03. Underscore Stripping Bug</span>
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">sanitize_username()</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      Strips valid underscores and crashes on <code className="text-rose-400">None</code> values.
+                <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-rose-300">
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-950/60 border border-rose-800/80 font-mono text-rose-400 font-bold">
+                        SEC-02
+                      </span>
+                      <span>PCI-DSS Card Number Exposure</span>
                     </div>
                   </div>
-                </>
-              )}
-            </div>
-
-            {/* Micro-Sandbox Parameters */}
-            <div className="p-3 rounded-xl bg-[#060a16] border border-white/[0.08] grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400">
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <Cpu className="h-3 w-3 text-cyan-400" />
-                <span>Vultr Llama 3.3 70B</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <Zap className="h-3 w-3 text-purple-400" />
-                <span>512MB RAM Cgroup</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <Lock className="h-3 w-3 text-amber-400" />
-                <span>Quarantined (0 Egress)</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-slate-300">
-                <ShieldCheck className="h-3 w-3 text-emerald-400" />
-                <span>UID 10001 (Non-root)</span>
-              </div>
-            </div>
-
-            {/* Primary Action Button inside Left Panel */}
-            <button
-              onClick={onStartSurgery}
-              disabled={status === 'running'}
-              className="w-full py-2.5 rounded-xl font-mono text-xs font-semibold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 border border-cyan-400/30"
-            >
-              <Play className="h-4 w-4 fill-white" />
-              <span>Execute Autonomous Surgery</span>
-            </button>
+                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                    Slice calculation exposes 5 digits instead of the 4-digit PCI compliance ceiling.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         ) : (
-          /* LIVE REASONING STREAM */
+          /* ACTIVE LOG STREAM */
           <AnimatePresence initial={false}>
             {filteredLogs.map((log, index) => {
               const isExpanded = expandedLogIdx === index;
@@ -428,47 +353,43 @@ export default function ReasoningFeed({
               const linesRemoved = log.payload?.stats?.lines_removed;
 
               return (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                  className={`rounded-xl border transition-colors overflow-hidden ${
                     log.step === 'HEALED'
-                      ? 'bg-emerald-950/25 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
+                      ? 'bg-emerald-950/15 border-emerald-500/30'
                       : log.step === 'ERROR'
-                      ? 'bg-rose-950/25 border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.15)]'
+                      ? 'bg-rose-950/15 border-rose-500/30'
                       : log.step === 'AI_PROPOSAL'
-                      ? 'bg-cyan-950/20 border-cyan-500/35 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
-                      : 'bg-[#080d1c]/70 border-white/[0.08] hover:border-cyan-500/30'
+                      ? 'bg-blue-950/15 border-blue-500/30'
+                      : 'bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700/80'
                   }`}
                 >
                   <div
                     onClick={() => (hasOutput || hasResponse) && setExpandedLogIdx(isExpanded ? null : index)}
-                    className={`p-3 flex items-start justify-between gap-2.5 cursor-pointer ${
-                      (hasOutput || hasResponse) ? 'hover:bg-white/[0.03]' : ''
+                    className={`p-3 flex items-start justify-between gap-2.5 ${
+                      (hasOutput || hasResponse) ? 'cursor-pointer hover:bg-zinc-800/20' : ''
                     }`}
                   >
                     <div className="flex items-start gap-2.5 min-w-0">
                       <div className="mt-0.5 shrink-0">{renderBadge(log.step)}</div>
                       <div className="space-y-1 min-w-0">
-                        <div className="text-slate-200 text-[11px] leading-snug font-sans break-words font-medium">
+                        <div className="text-zinc-200 text-xs leading-snug font-sans">
                           {log.message}
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
                           {latency && (
-                            <span className="text-cyan-400 flex items-center gap-1 bg-cyan-950/60 px-1.5 py-0.2 rounded border border-cyan-800/60">
-                              <Cpu className="h-2.5 w-2.5" />
+                            <span className="text-blue-400">
                               {latency}ms
                             </span>
                           )}
                           {linesAdded !== undefined && (
-                            <span className="text-emerald-400 font-semibold bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-800/60">
-                              +{linesAdded} / -{linesRemoved} lines
+                            <span className="text-emerald-400">
+                              +{linesAdded} / -{linesRemoved}
                             </span>
                           )}
                           {log.payload?.iteration && (
-                            <span className="text-purple-400 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-800/60">
+                            <span className="text-zinc-400">
                               turn {log.payload.iteration}
                             </span>
                           )}
@@ -477,10 +398,10 @@ export default function ReasoningFeed({
                     </div>
 
                     {(hasOutput || hasResponse) && (
-                      <div className="shrink-0 text-slate-400 hover:text-cyan-300 mt-1 transition-colors">
+                      <div className="shrink-0 text-zinc-500 hover:text-zinc-300 mt-1 transition-colors">
                         <ChevronRight
-                          className={`h-4 w-4 transition-transform duration-200 ${
-                            isExpanded ? 'rotate-90 text-cyan-400' : ''
+                          className={`h-3.5 w-3.5 transition-transform duration-150 ${
+                            isExpanded ? 'rotate-90 text-blue-400' : ''
                           }`}
                         />
                       </div>
@@ -489,26 +410,17 @@ export default function ReasoningFeed({
 
                   <AnimatePresence>
                     {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }}
-                        className="border-t border-white/[0.08] bg-[#03060d]/90 p-3 space-y-2.5 text-[10px] overflow-hidden"
-                      >
+                      <div className="border-t border-zinc-800/80 bg-zinc-950/70 p-3 space-y-2 text-[11px] overflow-hidden">
                         {hasResponse && (
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-cyan-400 font-semibold uppercase text-[9px] tracking-wider">
-                              <span className="flex items-center gap-1">
-                                <Sparkles className="h-3 w-3" />
-                                Vultr Llama 3.3 Reasoning & Code:
-                              </span>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-blue-400 text-[10px] uppercase font-mono">
+                              <span>Vultr Llama 3.3 Reasoning & Code:</span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   copyText(log.payload.raw_response, `ai-${index}`);
                                 }}
-                                className="flex items-center gap-1 text-slate-400 hover:text-white transition"
+                                className="text-zinc-500 hover:text-zinc-200 transition-colors"
                               >
                                 {copiedIdx === `ai-${index}` ? (
                                   <Check className="h-3 w-3 text-emerald-400" />
@@ -517,25 +429,22 @@ export default function ReasoningFeed({
                                 )}
                               </button>
                             </div>
-                            <pre className="p-2.5 rounded-xl bg-cyan-950/20 border border-cyan-800/40 text-cyan-200 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed shadow-inner font-mono text-[11px]">
+                            <pre className="p-2.5 rounded-lg bg-black/60 border border-zinc-800/80 text-zinc-300 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed font-mono text-[11px]">
                               {log.payload.raw_response}
                             </pre>
                           </div>
                         )}
 
                         {hasOutput && (
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-slate-400 font-semibold uppercase text-[9px] tracking-wider">
-                              <span className="flex items-center gap-1">
-                                <Terminal className="h-3 w-3 text-emerald-400" />
-                                Isolated Pytest Trace:
-                              </span>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-zinc-400 text-[10px] uppercase font-mono">
+                              <span>Pytest Execution Trace:</span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   copyText(log.payload.output, `stdout-${index}`);
                                 }}
-                                className="flex items-center gap-1 text-slate-400 hover:text-white transition"
+                                className="text-zinc-500 hover:text-zinc-200 transition-colors"
                               >
                                 {copiedIdx === `stdout-${index}` ? (
                                   <Check className="h-3 w-3 text-emerald-400" />
@@ -544,19 +453,47 @@ export default function ReasoningFeed({
                                 )}
                               </button>
                             </div>
-                            <pre className="p-2.5 rounded-xl bg-[#020409] border border-white/5 text-slate-300 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed shadow-inner font-mono text-[11px]">
+                            <pre className="p-2.5 rounded-lg bg-black/60 border border-zinc-800/80 text-zinc-300 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed font-mono text-[11px]">
                               {log.payload.output}
                             </pre>
                           </div>
                         )}
-                      </motion.div>
+                      </div>
                     )}
                   </AnimatePresence>
-                </motion.div>
+                </div>
               );
             })}
           </AnimatePresence>
         )}
+      </div>
+
+      {/* Bottom Elevated Action Box (Bolt.new Chat/Action Dock) */}
+      <div className="p-3 border-t border-zinc-800/80 bg-[#0F1017] shrink-0">
+        <div className="rounded-xl border border-zinc-800 bg-[#12131A] p-2 flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2 pl-2 text-xs font-sans text-zinc-400 truncate">
+            <Sparkles className="h-4 w-4 text-blue-400 shrink-0" />
+            <span className="truncate">
+              {status === 'running'
+                ? 'Surgery in progress inside sandbox...'
+                : 'Autonomous multi-turn diagnosis & repair ready'}
+            </span>
+          </div>
+
+          <motion.button
+            onClick={onStartSurgery}
+            disabled={status === 'running'}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className={`px-3.5 py-1.5 rounded-lg font-mono text-xs font-medium text-white transition shrink-0 disabled:opacity-50 ${
+              status === 'running'
+                ? 'bg-zinc-800 cursor-not-allowed text-zinc-500'
+                : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:brightness-110 shadow-sm'
+            }`}
+          >
+            {status === 'running' ? 'Operating...' : 'Execute Surgery'}
+          </motion.button>
+        </div>
       </div>
     </aside>
   );
