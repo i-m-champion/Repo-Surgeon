@@ -42,6 +42,25 @@ def health_check():
         }
     }
 
+DEMO_CONFIGS = {
+    "broken-calculator": {
+        "id": "broken-calculator",
+        "name": "Broken Calculator",
+        "target_file": "calculator.py",
+        "test_command": "pytest -v",
+        "description": "Arithmetic & boundary bugs causing ZeroDivisionError and power exponent failures.",
+        "tags": ["Arithmetic", "ZeroDivisionError", "Pytest"]
+    },
+    "auth-sanitizer": {
+        "id": "auth-sanitizer",
+        "name": "Auth & SQL Sanitizer",
+        "target_file": "sanitizer.py",
+        "test_command": "pytest -v",
+        "description": "Security sanitization suite with SQL injection escaping bug, password rules, and empty token crashes.",
+        "tags": ["Security", "SQL Injection", "Input Validation"]
+    }
+}
+
 @app.get("/api/demos")
 def list_demos():
     """List pre-packaged demo repositories available for repair."""
@@ -51,12 +70,16 @@ def list_demos():
         for entry in os.listdir(base_demo_dir):
             entry_path = os.path.join(base_demo_dir, entry)
             if os.path.isdir(entry_path):
-                demos.append({
+                cfg = DEMO_CONFIGS.get(entry, {
                     "id": entry,
                     "name": entry.replace("-", " ").title(),
-                    "path": entry_path,
-                    "description": "Python project with failing unit tests and arithmetic bugs."
+                    "target_file": "calculator.py",
+                    "test_command": "pytest -v",
+                    "description": "Python project with failing unit tests.",
+                    "tags": ["General", "Pytest"]
                 })
+                cfg["path"] = entry_path
+                demos.append(cfg)
     return {"demos": demos}
 
 @app.post("/api/demos/{demo_id}/reset")
@@ -67,11 +90,17 @@ def reset_demo(demo_id: str):
     if not os.path.exists(demo_path):
         return {"status": "error", "message": f"Demo repo '{demo_id}' not found"}
 
-    broken_template = os.path.join(demo_path, "calculator.broken.py")
-    target_file = os.path.join(demo_path, "calculator.py")
-    if os.path.exists(broken_template):
-        shutil.copy(broken_template, target_file)
-        return {"status": "success", "message": f"Reset '{demo_id}' to broken state"}
+    reset_count = 0
+    for filename in os.listdir(demo_path):
+        if filename.endswith(".broken.py"):
+            target_name = filename.replace(".broken.py", ".py")
+            src = os.path.join(demo_path, filename)
+            dst = os.path.join(demo_path, target_name)
+            shutil.copy(src, dst)
+            reset_count += 1
+
+    if reset_count > 0:
+        return {"status": "success", "message": f"Reset {reset_count} file(s) in '{demo_id}' to intentional broken state"}
 
     return {"status": "noop", "message": "No backup template found"}
 
@@ -89,6 +118,7 @@ async def websocket_heal_endpoint(websocket: WebSocket):
         repo_name = req.get("repo_name", "broken-calculator")
         target_file = req.get("target_file", "calculator.py")
         test_cmd = req.get("test_command", "pytest -v")
+        max_iterations = int(req.get("max_iterations", 3))
         
         base_demo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../demo-repos"))
         target_repo_path = os.path.join(base_demo_dir, repo_name)
@@ -103,7 +133,11 @@ async def websocket_heal_endpoint(websocket: WebSocket):
         async def stream_callback(payload: dict):
             await websocket.send_json(payload)
 
-        agent = RepoSurgeonAgent(repo_path=target_repo_path, stream_callback=stream_callback)
+        agent = RepoSurgeonAgent(
+            repo_path=target_repo_path,
+            stream_callback=stream_callback,
+            max_iterations=max_iterations
+        )
         await agent.heal(target_file_rel=target_file, test_cmd=test_cmd)
 
     except WebSocketDisconnect:

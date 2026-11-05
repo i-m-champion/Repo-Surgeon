@@ -1,7 +1,7 @@
 import React from 'react';
-import { GitPullRequest, FileCode, CheckCircle } from 'lucide-react';
+import { GitPullRequest, FileCode, CheckCircle, Download, ExternalLink } from 'lucide-react';
 
-export default function DiffViewer({ diff, isHealed }) {
+export default function DiffViewer({ diff, isHealed, stats, onOpenPR, repoName }) {
   if (!diff) {
     return (
       <div className="rounded-xl border border-slate-800 bg-[#0d1326] p-6 text-center text-slate-500 shadow-xl flex flex-col items-center justify-center h-[260px]">
@@ -11,6 +11,18 @@ export default function DiffViewer({ diff, isHealed }) {
       </div>
     );
   }
+
+  const downloadPatch = () => {
+    const blob = new Blob([diff], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reposurgeon-${repoName || 'patch'}.patch`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const renderDiffLine = (line, idx) => {
     let lineClass = 'text-slate-300';
@@ -31,19 +43,39 @@ export default function DiffViewer({ diff, isHealed }) {
 
   return (
     <div className="rounded-xl border border-slate-800 bg-[#0d1326] shadow-xl overflow-hidden flex flex-col">
-      <div className="bg-[#0e1424] px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+      <div className="bg-[#0e1424] px-4 py-3 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <GitPullRequest className="h-4 w-4 text-cyan-400" />
           <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
             Surgical Patch (Unified Diff)
           </span>
+          {stats && (
+            <span className="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+              <span className="text-emerald-400 font-bold">+{stats.lines_added || 0}</span> / <span className="text-rose-400 font-bold">-{stats.lines_removed || 0}</span>
+            </span>
+          )}
         </div>
-        {isHealed && (
-          <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded border border-emerald-800">
-            <CheckCircle className="h-3.5 w-3.5" />
-            PR Ready & Verified Green
-          </span>
-        )}
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={downloadPatch}
+            title="Download unified diff as .patch"
+            className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded flex items-center gap-1 transition"
+          >
+            <Download className="h-3 w-3" />
+            .patch
+          </button>
+
+          {isHealed && (
+            <button
+              onClick={onOpenPR}
+              className="flex items-center gap-1.5 text-xs font-medium text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900/80 px-2.5 py-1 rounded border border-emerald-700 shadow-sm transition"
+            >
+              <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
+              1-Click PR Ready
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="p-4 overflow-x-auto max-h-[300px] overflow-y-auto bg-[#070b14] divide-y divide-transparent">

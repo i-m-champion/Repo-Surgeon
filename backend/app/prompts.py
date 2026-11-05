@@ -20,3 +20,17 @@ DIAGNOSIS_USER_PROMPT = """We ran the test suite in our isolated Vultr sandbox a
 
 Please analyze the failure stack traces, identify the root cause, and output the corrected version of `{file_name}` enclosed in a ```python code block.
 """
+
+MULTI_TURN_RETRY_PROMPT = """Iteration {iteration} repair:
+The previous patch was tested inside our isolated Vultr micro-sandbox, but the following test failures still persist:
+
+--- REMAINING TEST RUNNER FAILURES ---
+{test_output}
+--------------------------------------
+
+--- CURRENT FILE CONTENT ({file_name}) ---
+{file_content}
+------------------------------------------
+
+Analyze why these specific assertions are still failing. Provide the refined, complete version of `{file_name}` enclosed in a ```python code block to make the test suite 100% green.
+"""
