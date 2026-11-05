@@ -28,16 +28,6 @@ export default function App() {
   const [targetFile, setTargetFile] = useState('calculator.py');
   const [testCmd, setTestCmd] = useState('pytest -v');
 
-  // Mouse tracking for Railway-style ambient cursor spotlight
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
   // Direct backend connection (FastAPI has CORS enabled for all origins)
   const apiBase = `http://${window.location.hostname || 'localhost'}:8001`;
 
@@ -182,8 +172,8 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#090A0F] relative text-zinc-100 select-none">
-      {/* Background Micro Grid */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-15 pointer-events-none z-0" />
+      {/* Background Micro Grid Pattern */}
+      <div className="absolute inset-0 bolt-grid-pattern opacity-30 pointer-events-none z-0" />
 
       {/* Top Bolt Navigation & Control Bar */}
       <Header
@@ -203,9 +193,9 @@ export default function App() {
         onOpenAudit={() => setIsAuditOpen(true)}
       />
 
-      {/* Split Workbench Main Canvas (100% height minus header) */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden w-full relative z-10">
-        {/* Left Panel (40% width): Bolt AI Agent Assistant Feed */}
+      {/* Bolt Floating Split Workbench with contained cards */}
+      <div className="flex-1 p-2 sm:p-2.5 gap-2 sm:gap-2.5 flex flex-col lg:flex-row overflow-hidden w-full relative z-10">
+        {/* Left Panel: Bolt AI Agent Assistant Feed */}
         <ReasoningFeed
           logs={logs}
           status={status}
@@ -213,11 +203,13 @@ export default function App() {
           maxIterations={maxIterations}
           selectedDemoObj={selectedDemoObj}
           testMetrics={testMetrics}
+          repoName={repoName}
           onStartSurgery={startSurgery}
           onSelectScenario={handleRepoChange}
+          onReset={resetState}
         />
 
-        {/* Right Panel (60% width): Bolt IDE Workstation */}
+        {/* Right Panel: Bolt IDE Workstation */}
         <Workstation
           logs={logs}
           diff={diff}
@@ -228,9 +220,11 @@ export default function App() {
           testMetrics={testMetrics}
           repoName={repoName}
           targetFile={targetFile}
+          onTargetFileChange={setTargetFile}
           iteration={iteration}
           onOpenPR={() => setIsPROpen(true)}
           onOpenAudit={() => setIsAuditOpen(true)}
+          onStartSurgery={startSurgery}
         />
       </div>
 
