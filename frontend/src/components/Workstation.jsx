@@ -18,9 +18,11 @@ import {
   Activity,
   Layers,
   Server,
-  Network
+  Network,
+  Code
 } from 'lucide-react';
 import TopologyVisualizer from './TopologyVisualizer';
+import CodeInspector from './CodeInspector';
 
 export default function Workstation({
   logs = [],
@@ -31,21 +33,30 @@ export default function Workstation({
   telemetry = null,
   testMetrics = null,
   repoName = 'broken-calculator',
+  targetFile = 'calculator.py',
   iteration = 1,
   onOpenPR,
   onOpenAudit
 }) {
-  const [activeTab, setActiveTab] = useState('terminal'); // 'terminal' | 'diff' | 'topology'
+  // Default to code inspector on idle, switch to terminal when running, switch to diff when healed
+  const [activeTab, setActiveTab] = useState(diff ? 'diff' : 'code');
   const [autoScroll, setAutoScroll] = useState(true);
   const [copiedDiff, setCopiedDiff] = useState(false);
   const terminalContainerRef = useRef(null);
+
+  // Automatically switch to terminal when running
+  useEffect(() => {
+    if (status === 'running') {
+      setActiveTab('terminal');
+    }
+  }, [status]);
 
   // Automatically switch to diff tab when repo is healed
   useEffect(() => {
     if (isHealed && diff) {
       setActiveTab('diff');
     }
-  }, [isHealed]);
+  }, [isHealed, diff]);
 
   // Autoscroll terminal container without scrolling window
   useEffect(() => {
@@ -147,10 +158,29 @@ export default function Workstation({
 
   return (
     <main className="flex-1 flex flex-col h-full bg-[#03060c]/95 overflow-hidden select-none">
-      {/* Bolt.new Style Dual-Tab Bar */}
+      {/* Workstation Tab Bar */}
       <div className="h-11 border-b border-white/[0.08] bg-[#060a14]/90 px-4 flex items-center justify-between gap-3 shrink-0">
-        {/* Left: Tab Selectors with LayoutId Spring Pill */}
+        {/* Left: Tab Selectors */}
         <div className="flex items-center gap-1.5 relative">
+          {/* Tab 1: Code Inspector */}
+          <button
+            onClick={() => setActiveTab('code')}
+            className={`relative px-3 py-1.5 rounded-xl text-xs font-mono font-medium flex items-center gap-2 transition-all duration-200 z-10 ${
+              activeTab === 'code' ? 'text-cyan-300' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            {activeTab === 'code' && (
+              <motion.div
+                layoutId="workstationActiveTab"
+                className="absolute inset-0 rounded-xl bg-white/[0.08] border border-cyan-500/40 shadow-sm shadow-cyan-500/10 -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+            <FileCode className="h-3.5 w-3.5 text-blue-400" />
+            <span>Target Code Inspector</span>
+          </button>
+
+          {/* Tab 2: Terminal */}
           <button
             onClick={() => setActiveTab('terminal')}
             className={`relative px-3 py-1.5 rounded-xl text-xs font-mono font-medium flex items-center gap-2 transition-all duration-200 z-10 ${
@@ -173,6 +203,7 @@ export default function Workstation({
             )}
           </button>
 
+          {/* Tab 3: Diff */}
           <button
             onClick={() => setActiveTab('diff')}
             className={`relative px-3 py-1.5 rounded-xl text-xs font-mono font-medium flex items-center gap-2 transition-all duration-200 z-10 ${
@@ -195,6 +226,7 @@ export default function Workstation({
             )}
           </button>
 
+          {/* Tab 4: Topology */}
           <button
             onClick={() => setActiveTab('topology')}
             className={`relative px-3 py-1.5 rounded-xl text-xs font-mono font-medium flex items-center gap-2 transition-all duration-200 z-10 ${
@@ -215,7 +247,6 @@ export default function Workstation({
 
         {/* Right: Pass Rate & Tab Actions */}
         <div className="flex items-center gap-2.5">
-          {/* Real-time Pytest Suite Pass Rate */}
           {testMetrics && testMetrics.total > 0 && (
             <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-xl bg-[#050811] border border-white/10 text-xs font-mono">
               <span className="text-slate-400 text-[10px]">Pytest:</span>
@@ -243,7 +274,6 @@ export default function Workstation({
             </div>
           )}
 
-          {/* Action buttons */}
           {activeTab === 'diff' ? (
             <div className="flex items-center gap-1.5">
               <button
@@ -305,7 +335,20 @@ export default function Workstation({
       {/* Main Workstation Viewport */}
       <div className="flex-1 overflow-hidden relative flex flex-col">
         <AnimatePresence mode="wait">
-          {activeTab === 'topology' ? (
+          {activeTab === 'code' ? (
+            /* TAB: CODE INSPECTOR (DEFAULT ON IDLE) */
+            <motion.div
+              key="code"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex-1 flex flex-col h-full overflow-hidden"
+            >
+              <CodeInspector repoName={repoName} targetFile={targetFile} />
+            </motion.div>
+          ) : activeTab === 'topology' ? (
+            /* TAB: TOPOLOGY CANVAS */
             <motion.div
               key="topology"
               initial={{ opacity: 0 }}
@@ -322,7 +365,7 @@ export default function Workstation({
               />
             </motion.div>
           ) : activeTab === 'terminal' ? (
-            /* TAB 1: SANDBOX TERMINAL */
+            /* TAB: SANDBOX TERMINAL */
             <motion.div
               key="terminal"
               initial={{ opacity: 0 }}
@@ -349,15 +392,18 @@ export default function Workstation({
               </div>
 
               {/* Terminal Output Stream */}
-              <div ref={terminalContainerRef} className="flex-1 p-4 overflow-y-auto space-y-4 font-mono text-xs selection:bg-cyan-900 selection:text-white">
+              <div
+                ref={terminalContainerRef}
+                className="flex-1 p-4 overflow-y-auto space-y-4 font-mono text-xs selection:bg-cyan-900 selection:text-white"
+              >
                 {sandboxOutputs.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-500 space-y-2.5">
                     <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/5">
                       <TerminalIcon className="h-8 w-8 text-slate-600 stroke-[1.5]" />
                     </div>
-                    <p className="text-sm text-slate-300 font-mono font-semibold">Sandbox Terminal Idle</p>
+                    <p className="text-sm text-slate-300 font-mono font-semibold">Sandbox Terminal Ready</p>
                     <p className="text-xs text-slate-500 max-w-sm leading-relaxed">
-                      Pytest execution streams, assertions, and verification traces inside the Vultr micro-sandbox will stream here in real-time.
+                      Click <strong className="text-cyan-400">Start Surgery</strong> above. Pytest assertion failures, Vultr Llama 3.3 diagnostics, and hotpatch checks will stream here live.
                     </p>
                   </div>
                 ) : (
@@ -391,28 +437,24 @@ export default function Workstation({
               {/* Railway-Style Sandbox Telemetry HUD Banner Docked at Bottom */}
               <div className="p-3 border-t border-white/[0.08] bg-[#070b16]/90 backdrop-blur-xl flex items-center justify-between gap-3 flex-wrap shrink-0 text-xs font-mono shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
                 <div className="flex items-center gap-4 flex-wrap">
-                  {/* CPU */}
                   <div className="flex items-center gap-1.5 text-slate-300">
                     <Cpu className="h-3.5 w-3.5 text-cyan-400" />
                     <span className="text-slate-400 text-[11px]">CPU:</span>
                     <span className="text-cyan-300 font-bold">1.0 vCPU</span>
                   </div>
 
-                  {/* RAM */}
                   <div className="flex items-center gap-1.5 text-slate-300">
                     <Zap className="h-3.5 w-3.5 text-purple-400" />
                     <span className="text-slate-400 text-[11px]">RAM:</span>
                     <span className="text-purple-300 font-bold">512 MB Cgroup</span>
                   </div>
 
-                  {/* Network Quarantine */}
                   <div className="flex items-center gap-1.5 text-slate-300">
                     <Lock className="h-3.5 w-3.5 text-amber-400" />
                     <span className="text-slate-400 text-[11px]">Network:</span>
                     <span className="text-amber-300 font-bold">Quarantined (0 Egress)</span>
                   </div>
 
-                  {/* Auto Kill Timeout */}
                   <div className="hidden md:flex items-center gap-1.5 text-slate-300">
                     <Clock className="h-3.5 w-3.5 text-rose-400" />
                     <span className="text-slate-400 text-[11px]">Auto-Kill:</span>
@@ -420,7 +462,6 @@ export default function Workstation({
                   </div>
                 </div>
 
-                {/* Security Audit Trigger Button */}
                 <button
                   onClick={onOpenAudit}
                   className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-500/40 text-[11px] font-mono transition shadow-sm hover:scale-105 active:scale-95"
@@ -431,7 +472,7 @@ export default function Workstation({
               </div>
             </motion.div>
           ) : (
-            /* TAB 2: SURGICAL DIFF */
+            /* TAB: SURGICAL DIFF */
             <motion.div
               key="diff"
               initial={{ opacity: 0 }}
@@ -440,7 +481,6 @@ export default function Workstation({
               transition={{ duration: 0.15 }}
               className="flex-1 flex flex-col h-full overflow-hidden bg-[#020409]"
             >
-              {/* Verified PR Ready Celebration Banner (when healed) */}
               {isHealed && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -474,7 +514,6 @@ export default function Workstation({
                 </motion.div>
               )}
 
-              {/* Diff Viewer Body */}
               <div className="flex-1 overflow-y-auto p-4 space-y-2 select-text font-mono text-xs">
                 {!diff ? (
                   <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-500 space-y-2.5">
@@ -488,7 +527,6 @@ export default function Workstation({
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-white/[0.08] bg-[#010307] overflow-hidden shadow-2xl">
-                    {/* File header bar */}
                     <div className="px-4 py-2.5 bg-[#060a16] border-b border-white/[0.08] flex items-center justify-between text-[11px] text-slate-400 font-mono">
                       <div className="flex items-center gap-2">
                         <FileCode className="h-4 w-4 text-cyan-400" />
@@ -504,7 +542,6 @@ export default function Workstation({
                       )}
                     </div>
 
-                    {/* Diff Lines */}
                     <div className="py-2.5 overflow-x-auto divide-y divide-white/[0.02]">
                       {diff.split('\n').map((line, idx) => renderDiffLine(line, idx))}
                     </div>

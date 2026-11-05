@@ -223,6 +223,8 @@ export default function App() {
           maxIterations={maxIterations}
           selectedDemoObj={selectedDemoObj}
           testMetrics={testMetrics}
+          onStartSurgery={startSurgery}
+          onSelectScenario={handleRepoChange}
         />
 
         {/* Right Panel (60% width): Dual-Tab Workstation */}
@@ -235,6 +237,7 @@ export default function App() {
           telemetry={telemetry}
           testMetrics={testMetrics}
           repoName={repoName}
+          targetFile={targetFile}
           iteration={iteration}
           onOpenPR={() => setIsPROpen(true)}
           onOpenAudit={() => setIsAuditOpen(true)}

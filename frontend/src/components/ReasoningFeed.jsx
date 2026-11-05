@@ -16,7 +16,11 @@ import {
   Zap,
   ArrowRight,
   Layers,
-  FileText
+  FileText,
+  Play,
+  Lock,
+  Flame,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function ReasoningFeed({
@@ -25,7 +29,9 @@ export default function ReasoningFeed({
   iteration = 1,
   maxIterations = 3,
   selectedDemoObj,
-  testMetrics
+  testMetrics,
+  onStartSurgery,
+  onSelectScenario
 }) {
   const [filter, setFilter] = useState('ALL'); // ALL, AI, SANDBOX
   const [expandedLogIdx, setExpandedLogIdx] = useState(null);
@@ -104,10 +110,9 @@ export default function ReasoningFeed({
     switch (step) {
       case 'HEALED':
       case 'SUCCESS':
-      case 'VERIFIED_GREEN':
         return (
           <span className="inline-flex items-center gap-1 text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]">
-            <CheckCircle2 className="h-3 w-3 text-emerald-400" /> VERIFIED GREEN
+            <CheckCircle2 className="h-3 w-3 text-emerald-400" /> HEALED
           </span>
         );
       case 'ERROR':
@@ -116,28 +121,10 @@ export default function ReasoningFeed({
             <XCircle className="h-3 w-3 text-rose-400" /> ERROR
           </span>
         );
-      case 'REFLECTING':
       case 'ITERATION_RETRY':
         return (
-          <span className="inline-flex items-center gap-1 text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-            <RefreshCw className="h-3 w-3 animate-spin text-amber-400" /> REFLECTING
-          </span>
-        );
-      case 'TURN_1_ATTEMPT':
-      case 'TURN_2_ATTEMPT':
-      case 'TURN_3_ATTEMPT':
-        return (
-          <span className="inline-flex items-center gap-1 text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-cyan-500/50">
-            <Zap className="h-3 w-3 text-cyan-400" /> {step.replace('_ATTEMPT', '')}
-          </span>
-        );
-      case 'TURN_1_PATCH':
-      case 'TURN_2_PATCH':
-      case 'TURN_3_PATCH':
-      case 'PATCH_GENERATED':
-        return (
-          <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-purple-500/50">
-            <Code2 className="h-3 w-3 text-purple-400" /> PATCH
+          <span className="inline-flex items-center gap-1 text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-amber-500/50">
+            <RefreshCw className="h-3 w-3 animate-spin text-amber-400" /> RETRY
           </span>
         );
       case 'AI_THINKING':
@@ -156,6 +143,12 @@ export default function ReasoningFeed({
             <ShieldCheck className="h-3 w-3 text-blue-400" /> SANDBOX
           </span>
         );
+      case 'PATCH_GENERATED':
+        return (
+          <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-purple-500/50">
+            <Code2 className="h-3 w-3 text-purple-400" /> PATCH
+          </span>
+        );
       default:
         return (
           <span className="inline-flex items-center text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-white/10">
@@ -164,6 +157,8 @@ export default function ReasoningFeed({
         );
     }
   };
+
+  const isCalculator = selectedDemoObj?.id !== 'auth-sanitizer';
 
   return (
     <aside className="w-full lg:w-[40%] xl:w-[38%] h-full flex flex-col bg-[#05070f]/90 border-r border-white/[0.08] overflow-hidden relative select-none">
@@ -293,30 +288,136 @@ export default function ReasoningFeed({
         </div>
       )}
 
-      {/* Assistant Feed Stream Cards (Bolt.new Style) */}
-      <div ref={feedContainerRef} className="flex-1 overflow-y-auto p-3 space-y-2.5 font-mono text-xs">
+      {/* Feed Area: When Idle, Show Rich Pre-flight Manifest; When Running, Stream Logs */}
+      <div ref={feedContainerRef} className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
         {filteredLogs.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3.5 text-slate-500">
-            <div className="relative">
-              <div className="absolute -inset-2 rounded-2xl bg-cyan-500/20 blur-xl animate-pulse" />
-              <div className="relative h-14 w-14 rounded-2xl bg-[#090e1f] border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-xl shadow-cyan-950/50">
-                <Sparkles className="h-7 w-7" />
+          /* RICH PRE-FLIGHT DIAGNOSTIC MANIFEST (Replaces the empty void!) */
+          <div className="space-y-3.5 animate-in fade-in duration-300">
+            {/* Surgery Briefing Card */}
+            <div className="p-3.5 rounded-2xl bg-[#080c1a] border border-cyan-500/20 shadow-xl space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                    <FileText className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-xs font-bold text-white font-mono">
+                    Pre-Flight Surgical Diagnosis
+                  </span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-mono font-semibold">
+                  3 Critical Bugs
+                </span>
               </div>
-            </div>
-            <div className="space-y-1.5 max-w-xs">
-              <h3 className="text-sm font-bold text-slate-200">
-                Ready for Surgery
-              </h3>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                Click <span className="text-cyan-400 font-semibold">Start Surgery</span> above to trigger isolated Pytest execution, Vultr Llama 3.3 diagnosis, and surgical micro-patching.
+              <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                Pytest baseline suite contains failing logic and boundary assertions. RepoSurgeon is ready to isolate execution inside the Vultr micro-sandbox.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 bg-black/50 px-3 py-1.5 rounded-xl border border-white/10">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              <span>Sandbox Quarantined & Ready</span>
+
+            {/* Bug Manifest Items */}
+            <div className="space-y-2">
+              <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider px-1">
+                Detected Bug Manifest:
+              </div>
+
+              {isCalculator ? (
+                <>
+                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
+                      <span>01. Inverted Subtraction</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">subtract(a, b)</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Returns <code className="text-rose-400">b - a</code> instead of <code className="text-emerald-400">a - b</code>, causing negative difference assertions to fail.
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
+                      <span>02. Missing ZeroDivisionError Guard</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">divide(a, b)</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Fails to raise <code className="text-amber-300">ValueError("Cannot divide by zero")</code> on <code className="text-rose-400">b == 0</code>.
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
+                      <span>03. Off-By-One Exponent</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">power(a, b)</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Returns <code className="text-rose-400">a ** (b - 1)</code> instead of <code className="text-emerald-400">a ** b</code>.
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
+                      <span>01. Incomplete XSS Sanitization</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">sanitize_input()</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Only replaces exact lowercase <code className="text-rose-400">&lt;script&gt;</code> string, leaving uppercase & closing tags intact.
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
+                      <span>02. PCI-DSS Credit Card Exposure</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">mask_credit_card()</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Off-by-one slice error exposing 5 digits instead of the required 4 digits.
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-500/30 space-y-1">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-rose-300">
+                      <span>03. Underscore Stripping Bug</span>
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-400">sanitize_username()</span>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Strips valid underscores and crashes on <code className="text-rose-400">None</code> values.
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
+
+            {/* Micro-Sandbox Parameters */}
+            <div className="p-3 rounded-xl bg-[#060a16] border border-white/[0.08] grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400">
+              <div className="flex items-center gap-1.5 text-slate-300">
+                <Cpu className="h-3 w-3 text-cyan-400" />
+                <span>Vultr Llama 3.3 70B</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-slate-300">
+                <Zap className="h-3 w-3 text-purple-400" />
+                <span>512MB RAM Cgroup</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-slate-300">
+                <Lock className="h-3 w-3 text-amber-400" />
+                <span>Quarantined (0 Egress)</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-slate-300">
+                <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                <span>UID 10001 (Non-root)</span>
+              </div>
+            </div>
+
+            {/* Primary Action Button inside Left Panel */}
+            <button
+              onClick={onStartSurgery}
+              disabled={status === 'running'}
+              className="w-full py-2.5 rounded-xl font-mono text-xs font-semibold text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 border border-cyan-400/30"
+            >
+              <Play className="h-4 w-4 fill-white" />
+              <span>Execute Autonomous Surgery</span>
+            </button>
           </div>
         ) : (
+          /* LIVE REASONING STREAM */
           <AnimatePresence initial={false}>
             {filteredLogs.map((log, index) => {
               const isExpanded = expandedLogIdx === index;
@@ -354,7 +455,6 @@ export default function ReasoningFeed({
                         <div className="text-slate-200 text-[11px] leading-snug font-sans break-words font-medium">
                           {log.message}
                         </div>
-                        {/* Micro stats tag bar */}
                         <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
                           {latency && (
                             <span className="text-cyan-400 flex items-center gap-1 bg-cyan-950/60 px-1.5 py-0.2 rounded border border-cyan-800/60">
@@ -387,7 +487,6 @@ export default function ReasoningFeed({
                     )}
                   </div>
 
-                  {/* Expandable Payload Content with Smooth Height Spring */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
