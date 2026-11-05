@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
+import HeroRepoSubmit from './components/HeroRepoSubmit';
 import SubNavBar from './components/SubNavBar';
 import ReasoningFeed from './components/ReasoningFeed';
 import Workstation from './components/Workstation';
@@ -101,6 +102,14 @@ export default function App() {
     setTestMetrics(null);
     setPrData(null);
     setIteration(1);
+
+    // Smoothly scroll down to workbench so live progress is visible
+    setTimeout(() => {
+      const el = document.getElementById('workbench');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
 
     // Establish WebSocket connection directly to FastAPI backend on port 8001
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -209,23 +218,24 @@ export default function App() {
       {/* Background Micro Grid */}
       <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none z-0" />
 
-      {/* Top Sticky Bolt Navigation & Control Bar with Hero GitHub URL Bar */}
-      <Header
-        status={status}
+      {/* 1. Clean, Minimal Bolt.new Header (like Photo 3) */}
+      <Header onOpenAudit={() => setIsAuditOpen(true)} />
+
+      {/* 2. Hero GitHub Repository Submitting Section (like Photo 1) */}
+      <HeroRepoSubmit
         repoUrl={repoUrl}
         onRepoUrlChange={handleRepoUrlChange}
         targetFile={targetFile}
         onTargetFileChange={setTargetFile}
         testCmd={testCmd}
         onTestCmdChange={setTestCmd}
-        maxIterations={maxIterations}
-        onMaxIterationsChange={setMaxIterations}
+        status={status}
         iteration={iteration}
+        maxIterations={maxIterations}
         onQuickFillSample={handleQuickFillSample}
-        onReset={resetState}
         onStartSurgery={startSurgery}
-        onOpenAudit={() => setIsAuditOpen(true)}
         onOpenPR={() => setIsPROpen(true)}
+        onOpenAudit={() => setIsAuditOpen(true)}
       />
 
       {/* Sub-Navigation Quick Anchor Bar */}
