@@ -38,10 +38,8 @@ export default function App() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Resolve API Base
-  const isDev =
-    window.location.port === '5173' || window.location.port === '3000';
-  const apiBase = isDev ? '' : `http://${window.location.hostname}:8001`;
+  // Direct backend connection (FastAPI has CORS enabled for all origins)
+  const apiBase = `http://${window.location.hostname || 'localhost'}:8001`;
 
   useEffect(() => {
     // Fetch available demo repositories from backend
@@ -81,10 +79,10 @@ export default function App() {
     setPrData(null);
     setIteration(1);
 
-    // Establish WebSocket connection
+    // Establish WebSocket connection directly to FastAPI backend on port 8001
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = isDev ? window.location.host : `${window.location.hostname}:8001`;
-    const wsUrl = `${protocol}//${wsHost}/ws/heal`;
+    const hostName = window.location.hostname || 'localhost';
+    const wsUrl = `${protocol}//${hostName}:8001/ws/heal`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
