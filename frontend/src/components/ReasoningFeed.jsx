@@ -9,16 +9,14 @@ import {
   RefreshCw,
   Cpu,
   ChevronRight,
-  GitCommit,
-  Clock,
-  Layers,
-  ArrowRight,
   Code2,
   Bug,
-  AlertCircle,
-  Play,
-  FileCode,
-  Shield
+  Copy,
+  Check,
+  Zap,
+  ArrowRight,
+  Layers,
+  FileText
 } from 'lucide-react';
 
 export default function ReasoningFeed({
@@ -31,6 +29,7 @@ export default function ReasoningFeed({
 }) {
   const [filter, setFilter] = useState('ALL'); // ALL, AI, SANDBOX
   const [expandedLogIdx, setExpandedLogIdx] = useState(null);
+  const [copiedIdx, setCopiedIdx] = useState(null);
   const feedEndRef = useRef(null);
 
   useEffect(() => {
@@ -77,55 +76,74 @@ export default function ReasoningFeed({
   };
 
   const steps = [
-    { title: '01 Diagnosing', desc: 'Isolate & run pytest in sandbox' },
-    { title: '02 Vultr Inference', desc: 'Query Llama 3.3 for root cause' },
-    { title: '03 Patching', desc: 'Generate surgical unified diff' },
-    { title: '04 Verified Green', desc: 'Regression test with zero leak' },
+    { title: 'Diagnose', desc: 'Pytest Suite' },
+    { title: 'Vultr AI', desc: 'Llama 3.3 70B' },
+    { title: 'Hotpatch', desc: 'Micro-Sandbox' },
+    { title: 'Verified', desc: 'Zero Regression' }
   ];
 
   const filteredLogs = logs.filter((log) => {
     if (filter === 'AI') {
-      return log.step.startsWith('AI') || log.step === 'HEALED';
+      return log.step?.startsWith('AI_') || log.payload?.raw_response;
     }
     if (filter === 'SANDBOX') {
-      return log.step.startsWith('SANDBOX') || log.step === 'INIT';
+      return log.step?.startsWith('SANDBOX_') || log.payload?.output;
     }
     return true;
   });
+
+  const copyText = (text, idx) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
 
   const renderBadge = (step) => {
     switch (step) {
       case 'HEALED':
       case 'SUCCESS':
         return (
-          <span className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-md">
-            <CheckCircle2 className="h-3 w-3" /> HEALED
+          <span className="inline-flex items-center gap-1 text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.25)]">
+            <CheckCircle2 className="h-3 w-3 text-emerald-400" /> HEALED
           </span>
         );
       case 'ERROR':
         return (
-          <span className="flex items-center gap-1 text-[10px] font-mono text-rose-400 bg-rose-950/60 border border-rose-500/30 px-2 py-0.5 rounded-md">
-            <XCircle className="h-3 w-3" /> ERROR
+          <span className="inline-flex items-center gap-1 text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-rose-500/50">
+            <XCircle className="h-3 w-3 text-rose-400" /> ERROR
+          </span>
+        );
+      case 'ITERATION_RETRY':
+        return (
+          <span className="inline-flex items-center gap-1 text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-amber-500/50">
+            <RefreshCw className="h-3 w-3 animate-spin text-amber-400" /> RETRY
           </span>
         );
       case 'AI_THINKING':
       case 'AI_PROPOSAL':
         return (
-          <span className="flex items-center gap-1 text-[10px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded-md">
-            <Sparkles className="h-3 w-3" /> VULTR LLM
+          <span className="inline-flex items-center gap-1 text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+            <Sparkles className="h-3 w-3 text-cyan-400" /> VULTR AI
           </span>
         );
       case 'SANDBOX_START':
       case 'SANDBOX_RESULT':
       case 'SANDBOX_VERIFY':
+      case 'SANDBOX_VERIFY_RESULT':
         return (
-          <span className="flex items-center gap-1 text-[10px] font-mono text-blue-400 bg-blue-950/60 border border-blue-500/30 px-2 py-0.5 rounded-md">
-            <Terminal className="h-3 w-3" /> SANDBOX
+          <span className="inline-flex items-center gap-1 text-blue-300 bg-blue-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-blue-500/50">
+            <ShieldCheck className="h-3 w-3 text-blue-400" /> SANDBOX
+          </span>
+        );
+      case 'PATCH_GENERATED':
+        return (
+          <span className="inline-flex items-center gap-1 text-purple-300 bg-purple-950/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-purple-500/50">
+            <Code2 className="h-3 w-3 text-purple-400" /> PATCH
           </span>
         );
       default:
         return (
-          <span className="text-[10px] font-mono text-slate-400 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-md">
+          <span className="inline-flex items-center text-slate-400 bg-slate-900/80 px-2 py-0.5 rounded-full text-[10px] font-mono border border-white/10">
             {step}
           </span>
         );
@@ -133,32 +151,32 @@ export default function ReasoningFeed({
   };
 
   return (
-    <aside className="w-full lg:w-[40%] h-full flex flex-col bg-[#07090e]/95 border-r border-white/[0.08] overflow-hidden relative select-none">
-      {/* Top Header */}
-      <div className="p-3 border-b border-white/[0.08] bg-[#090c14]/80 flex items-center justify-between gap-2 shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-            <Sparkles className="h-3.5 w-3.5" />
+    <aside className="w-full lg:w-[40%] xl:w-[38%] h-full flex flex-col bg-[#05070f]/90 border-r border-white/[0.08] overflow-hidden relative select-none">
+      {/* Top Header Bar */}
+      <div className="p-3 border-b border-white/[0.08] bg-[#070b16]/70 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shadow-sm shadow-cyan-500/10">
+            <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-200 font-mono">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-200 font-mono">
               Agent Reasoning Feed
             </h2>
             <div className="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
-              <span>Turn {iteration}/{maxIterations}</span>
+              <span className="text-cyan-400 font-semibold">Iteration {iteration}/{maxIterations}</span>
               <span>•</span>
-              <span className="text-cyan-400 font-medium">Vultr Llama 3.3 70B</span>
+              <span className="text-slate-400">Vultr Serverless Inference</span>
             </div>
           </div>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1 bg-[#05070d] p-0.5 rounded-lg border border-white/10 text-[10px]">
+        <div className="flex items-center gap-1 bg-[#03050a] p-0.5 rounded-xl border border-white/10 text-[10px]">
           <button
             onClick={() => setFilter('ALL')}
-            className={`px-2 py-0.5 rounded font-mono transition ${
+            className={`px-2 py-0.5 rounded-lg font-mono transition-all duration-200 ${
               filter === 'ALL'
-                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
+                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -166,9 +184,9 @@ export default function ReasoningFeed({
           </button>
           <button
             onClick={() => setFilter('AI')}
-            className={`px-2 py-0.5 rounded font-mono transition ${
+            className={`px-2 py-0.5 rounded-lg font-mono transition-all duration-200 ${
               filter === 'AI'
-                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
+                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -176,9 +194,9 @@ export default function ReasoningFeed({
           </button>
           <button
             onClick={() => setFilter('SANDBOX')}
-            className={`px-2 py-0.5 rounded font-mono transition ${
+            className={`px-2 py-0.5 rounded-lg font-mono transition-all duration-200 ${
               filter === 'SANDBOX'
-                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30'
+                ? 'bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/40 shadow-sm'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -187,44 +205,51 @@ export default function ReasoningFeed({
         </div>
       </div>
 
-      {/* Visual Stepper: Railway / Bolt.new Style Pipeline */}
-      <div className="p-3 border-b border-white/[0.08] bg-[#080b13]/60 shrink-0">
-        <div className="grid grid-cols-4 gap-1.5">
+      {/* Visual Stepper: Railway / Bolt.new Style Connected Pipeline */}
+      <div className="p-3 border-b border-white/[0.08] bg-[#070b18]/40 shrink-0">
+        <div className="grid grid-cols-4 gap-2 relative">
           {steps.map((st, idx) => {
             const state = computeStepState(idx);
             return (
               <div
                 key={idx}
-                className={`relative p-2 rounded-lg border text-left transition-all duration-300 flex flex-col justify-between ${
+                className={`relative p-2 rounded-xl border text-left transition-all duration-300 flex flex-col justify-between ${
                   state === 'complete'
-                    ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-300 shadow-sm shadow-emerald-950/30'
+                    ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
                     : state === 'active'
-                    ? 'bg-cyan-950/30 border-cyan-400/50 text-cyan-200 shadow-sm shadow-cyan-500/20'
+                    ? 'bg-cyan-950/30 border-cyan-400/60 text-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.25)]'
                     : state === 'failed'
-                    ? 'bg-rose-950/20 border-rose-500/30 text-rose-300'
+                    ? 'bg-rose-950/20 border-rose-500/40 text-rose-300'
                     : 'bg-white/[0.02] border-white/5 text-slate-500'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-mono font-bold">0{idx + 1}</span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[10px] font-mono font-bold tracking-wider">
+                    0{idx + 1}
+                  </span>
                   {state === 'complete' && (
-                    <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
                   )}
                   {state === 'active' && (
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400"></span>
+                      <span className="animate-radar-ring absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
                     </span>
                   )}
                   {state === 'failed' && (
-                    <XCircle className="h-3 w-3 text-rose-400" />
+                    <XCircle className="h-3.5 w-3.5 text-rose-400" />
                   )}
                   {state === 'pending' && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-slate-600" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-700" />
                   )}
                 </div>
-                <div className="font-mono text-[10px] font-semibold leading-tight truncate">
-                  {st.title}
+                <div>
+                  <div className="font-mono text-[11px] font-bold leading-tight truncate">
+                    {st.title}
+                  </div>
+                  <div className="text-[9px] text-slate-400 truncate mt-0.5">
+                    {st.desc}
+                  </div>
                 </div>
               </div>
             );
@@ -232,97 +257,48 @@ export default function ReasoningFeed({
         </div>
       </div>
 
-      {/* Assistant Feed / Reasoning Log Cards (Scrollable) */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
-        {filteredLogs.length === 0 ? (
-          /* High-End Diagnostic Pre-Flight Blueprint (Replaces the empty void) */
-          <div className="space-y-3.5 select-text">
-            {/* Target Health & Spec Card */}
-            <div className="p-3.5 rounded-xl bg-gradient-to-br from-[#0c101c] to-[#070a12] border border-white/[0.08] shadow-lg">
-              <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.06] mb-3">
-                <div className="flex items-center gap-2">
-                  <Bug className="h-4 w-4 text-rose-400" />
-                  <span className="font-mono font-bold text-slate-200 text-xs">
-                    Target Health: 40%
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono text-rose-300 bg-rose-950/60 border border-rose-500/30 px-2 py-0.5 rounded">
-                  3 Failing Tests
-                </span>
-              </div>
-
-              {/* Detected Test Assertion Breakdown */}
-              <div className="space-y-1.5 text-[11px] font-mono">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-200">
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
-                    <span className="font-semibold truncate">test_subtract</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 shrink-0">Assert -6 == 6 (Inverted)</span>
-                </div>
-
-                <div className="flex items-center justify-between p-2 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-200">
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
-                    <span className="font-semibold truncate">test_divide_by_zero</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 shrink-0">Missing ValueError</span>
-                </div>
-
-                <div className="flex items-center justify-between p-2 rounded-lg bg-rose-950/20 border border-rose-500/20 text-rose-200">
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="h-2 w-2 rounded-full bg-rose-500 shrink-0" />
-                    <span className="font-semibold truncate">test_power</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 shrink-0">Off-by-one Exponent</span>
-                </div>
-
-                <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-emerald-200 opacity-75">
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                    <span className="truncate">test_add & test_multiply</span>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 shrink-0">Passing (2 tests)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Autonomous Execution Safeguards Card */}
-            <div className="p-3.5 rounded-xl bg-[#090d18]/70 border border-white/[0.08] space-y-2.5">
-              <div className="flex items-center gap-2 text-slate-300 font-mono text-xs font-semibold">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                <span>Blast Radius Zero Quarantine</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-                <div className="p-2 rounded bg-black/40 border border-white/5 space-y-0.5">
-                  <span className="text-slate-500 block">Container UID</span>
-                  <span className="text-emerald-400 font-semibold">10001 (Non-root)</span>
-                </div>
-                <div className="p-2 rounded bg-black/40 border border-white/5 space-y-0.5">
-                  <span className="text-slate-500 block">RAM & CPU Cap</span>
-                  <span className="text-slate-300 font-semibold">512 MB • 1.0 vCPU</span>
-                </div>
-                <div className="p-2 rounded bg-black/40 border border-white/5 space-y-0.5">
-                  <span className="text-slate-500 block">Network Boundary</span>
-                  <span className="text-amber-400 font-semibold">Quarantined (0 Egress)</span>
-                </div>
-                <div className="p-2 rounded bg-black/40 border border-white/5 space-y-0.5">
-                  <span className="text-slate-500 block">LLM Engine</span>
-                  <span className="text-cyan-400 font-semibold">Vultr Serverless</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Operation Readiness Banner */}
-            <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-950/30 to-blue-950/30 border border-cyan-500/20 text-center space-y-1.5">
-              <span className="text-[11px] font-mono text-cyan-300 font-semibold flex items-center justify-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-                System Pre-warmed & Ready
+      {/* Target Scenario Context Banner */}
+      {selectedDemoObj && (
+        <div className="px-3 py-2 border-b border-white/[0.05] bg-[#080d1e]/30 flex items-center justify-between text-[11px] shrink-0">
+          <div className="flex items-center gap-2 truncate text-slate-300">
+            <Bug className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
+            <span className="text-slate-400 font-mono text-[10px]">SCENARIO:</span>
+            <span className="truncate text-slate-200 font-medium">{selectedDemoObj.description}</span>
+          </div>
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            {(selectedDemoObj.tags || []).slice(0, 2).map((t, i) => (
+              <span
+                key={i}
+                className="px-2 py-0.5 rounded-full bg-[#0a0f20] border border-white/10 text-slate-400 text-[9px] font-mono"
+              >
+                {t}
               </span>
-              <p className="text-[10px] text-slate-400 leading-relaxed font-sans">
-                Click <span className="text-white font-semibold">Start Surgery</span> in the top header to isolate pytest runs inside the Vultr sandbox, synthesize patches via Llama 3.3, and achieve 100% test coverage.
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Assistant Feed Stream Cards (Bolt.new Style) */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 font-mono text-xs">
+        {filteredLogs.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3.5 text-slate-500">
+            <div className="relative">
+              <div className="absolute -inset-2 rounded-2xl bg-cyan-500/20 blur-xl animate-pulse" />
+              <div className="relative h-14 w-14 rounded-2xl bg-[#090e1f] border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-xl shadow-cyan-950/50">
+                <Sparkles className="h-7 w-7" />
+              </div>
+            </div>
+            <div className="space-y-1.5 max-w-xs">
+              <h3 className="text-sm font-bold text-slate-200">
+                Ready for Surgery
+              </h3>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Click <span className="text-cyan-400 font-semibold">Start Surgery</span> above to trigger isolated Pytest execution, Vultr Llama 3.3 diagnosis, and surgical micro-patching.
               </p>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 bg-black/50 px-3 py-1.5 rounded-xl border border-white/10">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span>Sandbox Quarantined & Ready</span>
             </div>
           </div>
         ) : (
@@ -338,47 +314,47 @@ export default function ReasoningFeed({
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`rounded-xl border transition-all duration-200 overflow-hidden ${
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                     log.step === 'HEALED'
-                      ? 'bg-emerald-950/20 border-emerald-500/40 shadow-lg shadow-emerald-950/30'
+                      ? 'bg-emerald-950/25 border-emerald-500/40 shadow-[0_0_20px_rgba(16,185,129,0.15)]'
                       : log.step === 'ERROR'
-                      ? 'bg-rose-950/20 border-rose-500/40'
+                      ? 'bg-rose-950/25 border-rose-500/40 shadow-[0_0_20px_rgba(244,63,94,0.15)]'
                       : log.step === 'AI_PROPOSAL'
-                      ? 'bg-cyan-950/20 border-cyan-500/30'
-                      : 'bg-[#090d18]/60 border-white/10 hover:border-cyan-500/30'
+                      ? 'bg-cyan-950/20 border-cyan-500/35 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
+                      : 'bg-[#080d1c]/70 border-white/[0.08] hover:border-cyan-500/30'
                   }`}
                 >
                   <div
                     onClick={() => (hasOutput || hasResponse) && setExpandedLogIdx(isExpanded ? null : index)}
-                    className={`p-2.5 flex items-start justify-between gap-2 cursor-pointer ${
-                      (hasOutput || hasResponse) ? 'hover:bg-white/[0.02]' : ''
+                    className={`p-3 flex items-start justify-between gap-2.5 cursor-pointer ${
+                      (hasOutput || hasResponse) ? 'hover:bg-white/[0.03]' : ''
                     }`}
                   >
-                    <div className="flex items-start gap-2 min-w-0">
+                    <div className="flex items-start gap-2.5 min-w-0">
                       <div className="mt-0.5 shrink-0">{renderBadge(log.step)}</div>
-                      <div className="space-y-0.5 min-w-0">
-                        <div className="text-slate-200 text-[11px] leading-snug font-sans break-words">
+                      <div className="space-y-1 min-w-0">
+                        <div className="text-slate-200 text-[11px] leading-snug font-sans break-words font-medium">
                           {log.message}
                         </div>
-                        {/* Micro stats */}
+                        {/* Micro stats tag bar */}
                         <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
                           {latency && (
-                            <span className="text-cyan-400 flex items-center gap-0.5">
+                            <span className="text-cyan-400 flex items-center gap-1 bg-cyan-950/60 px-1.5 py-0.2 rounded border border-cyan-800/60">
                               <Cpu className="h-2.5 w-2.5" />
                               {latency}ms
                             </span>
                           )}
                           {linesAdded !== undefined && (
-                            <span className="text-emerald-400 font-semibold">
+                            <span className="text-emerald-400 font-semibold bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-800/60">
                               +{linesAdded} / -{linesRemoved} lines
                             </span>
                           )}
                           {log.payload?.iteration && (
-                            <span className="text-purple-400">
-                              iter {log.payload.iteration}
+                            <span className="text-purple-400 bg-purple-950/60 px-1.5 py-0.2 rounded border border-purple-800/60">
+                              turn {log.payload.iteration}
                             </span>
                           )}
                         </div>
@@ -386,9 +362,9 @@ export default function ReasoningFeed({
                     </div>
 
                     {(hasOutput || hasResponse) && (
-                      <div className="shrink-0 text-slate-500 hover:text-slate-300 mt-1">
+                      <div className="shrink-0 text-slate-400 hover:text-cyan-300 mt-1 transition-colors">
                         <ChevronRight
-                          className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                          className={`h-4 w-4 transition-transform duration-200 ${
                             isExpanded ? 'rotate-90 text-cyan-400' : ''
                           }`}
                         />
@@ -396,34 +372,67 @@ export default function ReasoningFeed({
                     )}
                   </div>
 
-                  {/* Expanded Detail Panel */}
+                  {/* Expandable Payload Content with Smooth Height Spring */}
                   <AnimatePresence>
                     {isExpanded && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="border-t border-white/10 bg-[#04060c] p-2.5 space-y-2 text-[11px]"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        className="border-t border-white/[0.08] bg-[#03060d]/90 p-3 space-y-2.5 text-[10px] overflow-hidden"
                       >
-                        {hasOutput && (
-                          <div>
-                            <span className="text-slate-400 text-[10px] uppercase font-mono tracking-wider block mb-1">
-                              Sandbox Command Trace:
-                            </span>
-                            <pre className="p-2 rounded bg-black/60 text-slate-300 overflow-x-auto border border-white/5 text-[10px] leading-relaxed max-h-48 overflow-y-auto">
-                              {log.payload.output}
+                        {hasResponse && (
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-cyan-400 font-semibold uppercase text-[9px] tracking-wider">
+                              <span className="flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" />
+                                Vultr Llama 3.3 Reasoning & Code:
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyText(log.payload.raw_response, `ai-${index}`);
+                                }}
+                                className="flex items-center gap-1 text-slate-400 hover:text-white transition"
+                              >
+                                {copiedIdx === `ai-${index}` ? (
+                                  <Check className="h-3 w-3 text-emerald-400" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </button>
+                            </div>
+                            <pre className="p-2.5 rounded-xl bg-cyan-950/20 border border-cyan-800/40 text-cyan-200 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed shadow-inner font-mono text-[11px]">
+                              {log.payload.raw_response}
                             </pre>
                           </div>
                         )}
 
-                        {hasResponse && (
-                          <div>
-                            <span className="text-cyan-400 text-[10px] uppercase font-mono tracking-wider block mb-1">
-                              Vultr Inference Synthesis:
-                            </span>
-                            <div className="p-2 rounded bg-cyan-950/20 text-cyan-200 border border-cyan-900/30 text-[10px] leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
-                              {log.payload.raw_response}
+                        {hasOutput && (
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-slate-400 font-semibold uppercase text-[9px] tracking-wider">
+                              <span className="flex items-center gap-1">
+                                <Terminal className="h-3 w-3 text-emerald-400" />
+                                Isolated Pytest Trace:
+                              </span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyText(log.payload.output, `stdout-${index}`);
+                                }}
+                                className="flex items-center gap-1 text-slate-400 hover:text-white transition"
+                              >
+                                {copiedIdx === `stdout-${index}` ? (
+                                  <Check className="h-3 w-3 text-emerald-400" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </button>
                             </div>
+                            <pre className="p-2.5 rounded-xl bg-[#020409] border border-white/5 text-slate-300 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed shadow-inner font-mono text-[11px]">
+                              {log.payload.output}
+                            </pre>
                           </div>
                         )}
                       </motion.div>

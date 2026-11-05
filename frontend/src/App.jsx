@@ -22,11 +22,21 @@ export default function App() {
   const [isPROpen, setIsPROpen] = useState(false);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
 
-  // Repos / Demos
+  // Repos / Scenarios
   const [demos, setDemos] = useState([]);
   const [repoName, setRepoName] = useState('broken-calculator');
   const [targetFile, setTargetFile] = useState('calculator.py');
   const [testCmd, setTestCmd] = useState('pytest -v');
+
+  // Mouse tracking for Railway-style ambient cursor spotlight
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // Resolve API Base
   const apiBase =
@@ -177,11 +187,19 @@ export default function App() {
   const selectedDemoObj = demos.find((d) => d.id === repoName);
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-950/20 via-[#07090e] to-[#04060a] relative text-slate-100 select-none">
-      {/* Background Dot Grid Overlay */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-25 pointer-events-none z-0" />
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-[#030509] relative text-slate-100 select-none">
+      {/* Railway Ambient Gradient Orbs */}
+      <div className="absolute top-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[130px] pointer-events-none" />
+      <div className="absolute top-[30%] right-[10%] w-[450px] h-[450px] rounded-full bg-indigo-600/10 blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[40%] w-[600px] h-[400px] rounded-full bg-emerald-600/5 blur-[160px] pointer-events-none" />
 
-      {/* Top Glassmorphism Navigation & Control Bar */}
+      {/* Background Dot Grid with Edge Mask */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-40 pointer-events-none z-0" />
+
+      {/* Interactive Cursor Spotlight Glow */}
+      <div className="ambient-glow-cursor" />
+
+      {/* Top Glassmorphic Navigation & Control Bar */}
       <Header
         status={status}
         repoName={repoName}
