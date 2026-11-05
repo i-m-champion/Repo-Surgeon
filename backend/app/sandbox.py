@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import tempfile
 import time
@@ -111,9 +112,13 @@ class SandboxManager:
     def _run_isolated_subprocess(self, workdir: str, command: str, timeout: int, start_time: float) -> Dict[str, Any]:
         """Ephemeral fallback isolation runner when Docker daemon is not active."""
         try:
-            # Strip dangerous environment variables to protect secrets
+            # Strip dangerous environment variables to protect secrets, while keeping runner executables
+            bin_dir = os.path.dirname(sys.executable)
+            current_path = os.environ.get("PATH", "/usr/bin:/bin")
+            safe_path = f"{bin_dir}:{current_path}" if bin_dir and bin_dir not in current_path else current_path
+            
             clean_env = {
-                "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+                "PATH": safe_path,
                 "PYTHONPATH": workdir,
                 "HOME": workdir,
                 "LANG": "en_US.UTF-8"

@@ -78,11 +78,18 @@ export default function App() {
     };
   };
 
-  const resetState = () => {
+  const resetState = async () => {
     setStatus('idle');
     setLogs([]);
     setDiff('');
     setIsHealed(false);
+    try {
+      await fetch(`http://${window.location.hostname}:8000/api/demos/${repoName}/reset`, {
+        method: 'POST',
+      });
+    } catch (e) {
+      console.warn('Could not reset demo repo on backend:', e);
+    }
   };
 
   return (

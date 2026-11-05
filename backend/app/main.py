@@ -1,4 +1,5 @@
 import os
+import shutil
 import json
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -57,6 +58,22 @@ def list_demos():
                     "description": "Python project with failing unit tests and arithmetic bugs."
                 })
     return {"demos": demos}
+
+@app.post("/api/demos/{demo_id}/reset")
+def reset_demo(demo_id: str):
+    """Reset a demo repository back to its intentional broken state."""
+    base_demo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../demo-repos"))
+    demo_path = os.path.join(base_demo_dir, demo_id)
+    if not os.path.exists(demo_path):
+        return {"status": "error", "message": f"Demo repo '{demo_id}' not found"}
+
+    broken_template = os.path.join(demo_path, "calculator.broken.py")
+    target_file = os.path.join(demo_path, "calculator.py")
+    if os.path.exists(broken_template):
+        shutil.copy(broken_template, target_file)
+        return {"status": "success", "message": f"Reset '{demo_id}' to broken state"}
+
+    return {"status": "noop", "message": "No backup template found"}
 
 @app.websocket("/ws/heal")
 async def websocket_heal_endpoint(websocket: WebSocket):

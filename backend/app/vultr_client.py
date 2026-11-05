@@ -38,31 +38,44 @@ class VultrInferenceClient:
 
     def _mock_response(self, user_prompt: str) -> str:
         """Simulated response for initial setup when API key is pending."""
-        if "analyze" in user_prompt.lower() or "diagnosis" in user_prompt.lower():
-            return json.dumps({
-                "diagnosis": "Division by zero is not handled when b=0. Also power function has off-by-one exponent error.",
-                "root_cause": "calculator.py line 14 has no check for ZeroDivisionError; line 22 computes a ** (b - 1).",
-                "recommended_action": "Add validation for zero denominator and fix exponent equation."
-            }, indent=2)
-        else:
-            return """```python
-# Fixed version of calculator.py
+        return '''Root cause diagnosis:
+1. `subtract`: Reversed operands (`b - a` instead of `a - b`), causing negative difference assertions to fail.
+2. `divide`: Missing validation for `b == 0` to raise `ValueError("Cannot divide by zero")`.
+3. `power`: Off-by-one exponent bug (`a ** (b - 1)` instead of `a ** b`).
+
+Here is the surgical patch fixing all identified bugs while preserving the API:
+
+```python
+"""
+Calculator Module with intentional bugs repaired by RepoSurgeon.
+"""
+
 def add(a: float, b: float) -> float:
+    """Add two numbers."""
     return a + b
 
 def subtract(a: float, b: float) -> float:
+    """Subtract b from a."""
     return a - b
 
 def multiply(a: float, b: float) -> float:
+    """Multiply two numbers."""
     return a * b
 
 def divide(a: float, b: float) -> float:
+    """
+    Divide a by b.
+    Validates b != 0 to prevent unhandled ZeroDivisionError.
+    """
     if b == 0:
         raise ValueError("Cannot divide by zero")
     return a / b
 
 def power(a: float, b: float) -> float:
+    """
+    Raise a to the power of b.
+    """
     return a ** b
-```"""
+```'''
 
 vultr_client = VultrInferenceClient()
