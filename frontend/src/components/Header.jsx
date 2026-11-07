@@ -12,7 +12,10 @@ export default function Header({ onOpenAudit }) {
   return (
     <header className="sticky top-0 z-50 w-full h-12 border-b border-zinc-800/80 bg-[#090A0F]/90 backdrop-blur-md px-6 flex items-center justify-between select-none">
       {/* Left: Clean Brand Logo like bolt.new */}
-      <div className="flex items-center gap-2.5">
+      <div
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+      >
         <div className="h-7 w-7 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-blue-400">
           <Stethoscope className="h-4 w-4" />
         </div>
