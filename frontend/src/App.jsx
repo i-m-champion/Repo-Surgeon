@@ -30,7 +30,7 @@ export default function App() {
 
   // Repos / Scenarios / GitHub URLs
   const [demos, setDemos] = useState([]);
-  const [repoUrl, setRepoUrl] = useState('https://github.com/i-m-champion/broken-calculator');
+  const [repoUrl, setRepoUrl] = useState(''); // empty by default with active blinking cursor
   const [repoName, setRepoName] = useState('broken-calculator');
   const [targetFile, setTargetFile] = useState('calculator.py');
   const [testCmd, setTestCmd] = useState('pytest -v');
@@ -103,6 +103,15 @@ export default function App() {
     setPrData(null);
     setIteration(1);
 
+    const effectiveRepoUrl = (repoUrl && repoUrl.trim()) ? repoUrl.trim() : 'https://github.com/i-m-champion/broken-calculator';
+    const effectiveRepoName = repoName || 'broken-calculator';
+    const effectiveTargetFile = (targetFile && targetFile.trim()) ? targetFile.trim() : 'calculator.py';
+    const effectiveTestCmd = (testCmd && testCmd.trim()) ? testCmd.trim() : 'pytest -v';
+
+    if (!repoUrl) {
+      setRepoUrl(effectiveRepoUrl);
+    }
+
     // Smoothly scroll down to workbench so live progress is visible
     setTimeout(() => {
       const el = document.getElementById('workbench');
@@ -120,10 +129,10 @@ export default function App() {
     ws.onopen = () => {
       ws.send(
         JSON.stringify({
-          repo_url: repoUrl,
-          repo_name: repoName,
-          target_file: targetFile,
-          test_command: testCmd,
+          repo_url: effectiveRepoUrl,
+          repo_name: effectiveRepoName,
+          target_file: effectiveTargetFile,
+          test_command: effectiveTestCmd,
           max_iterations: maxIterations
         })
       );

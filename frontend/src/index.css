@@ -90,6 +90,30 @@
   animation: shimmer 4s infinite linear;
 }
 
+/* Authentic Bolt.new Signature Background Gradient System */
+.bolt-hero-gradient {
+  background-color: #02091d;
+  background-image: 
+    radial-gradient(120% 90% at 50% 0%, rgba(6, 158, 233, 0.45) 0%, rgba(0, 155, 247, 0.3) 25%, rgba(1, 64, 155, 0.22) 50%, rgba(13, 51, 113, 0.1) 75%, transparent 100%),
+    radial-gradient(850px circle at 85% 35%, rgba(162, 208, 242, 0.22) 0%, rgba(6, 158, 233, 0.12) 35%, transparent 70%),
+    radial-gradient(800px circle at 15% 40%, rgba(1, 64, 155, 0.35) 0%, rgba(13, 51, 113, 0.15) 45%, transparent 70%),
+    linear-gradient(180deg, #01143c 0%, #03174a 30%, #051f62 55%, #071946 80%, #090a0f 100%);
+}
+
+/* Bolt Blinking Cursor */
+@keyframes blink-cursor {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.animate-blink-cursor {
+  animation: blink-cursor 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* Monospace Code Styling */
 code, pre, kbd {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
