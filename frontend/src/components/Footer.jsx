@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stethoscope, ArrowUp, ShieldCheck, Zap, Github, ExternalLink } from 'lucide-react';
+import { ArrowUp, ShieldCheck, Zap, Github, ExternalLink } from 'lucide-react';
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -18,8 +18,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         {/* Left: Brand & Tagline */}
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-blue-400">
-            <Stethoscope className="h-4 w-4" />
+          <div className="relative h-8 w-8 rounded-full overflow-hidden border border-cyan-400/40 shadow-[0_0_10px_rgba(6,182,212,0.3)] shrink-0">
+            <img src="/logo.png" alt="RepoSurgeon Logo" className="h-full w-full object-cover" />
           </div>
           <div>
             <div className="flex items-center gap-2">

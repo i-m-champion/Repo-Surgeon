@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stethoscope, ShieldCheck, Github, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Github, ExternalLink } from 'lucide-react';
 
 export default function Header({ onOpenAudit }) {
   const scrollTo = (id) => {
@@ -16,8 +16,12 @@ export default function Header({ onOpenAudit }) {
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
       >
-        <div className="h-7 w-7 rounded-lg bg-zinc-900 border border-zinc-700/60 flex items-center justify-center text-blue-400">
-          <Stethoscope className="h-4 w-4" />
+        <div className="relative h-7 w-7 rounded-full overflow-hidden border border-cyan-400/40 shadow-[0_0_10px_rgba(6,182,212,0.4)] shrink-0">
+          <img
+            src="/logo.png"
+            alt="RepoSurgeon Logo"
+            className="h-full w-full object-cover"
+          />
         </div>
         <div className="flex items-center gap-1.5 font-sans">
           <span className="font-bold text-white tracking-tight text-sm">RepoSurgeon</span>

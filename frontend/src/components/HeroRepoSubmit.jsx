@@ -119,7 +119,22 @@ export default function HeroRepoSubmit({
       {/* Main Center Content Container */}
       <div className="my-auto w-full max-w-4xl space-y-8 sm:space-y-10 relative z-10 flex flex-col items-center">
         {/* Main Heading & Subtitle: Exactly like Photo 1 */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 flex flex-col items-center">
+          {/* Official Emblem Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#0a1228]/85 border border-cyan-400/35 shadow-[0_0_20px_rgba(6,182,212,0.3)] backdrop-blur-md mb-1 hover:border-cyan-400/60 transition-all cursor-default"
+          >
+            <div className="relative h-5 w-5 rounded-full overflow-hidden border border-cyan-400/50 shrink-0 shadow-[0_0_8px_rgba(6,182,212,0.6)]">
+              <img src="/logo.png" alt="RepoSurgeon Logo" className="h-full w-full object-cover" />
+            </div>
+            <span className="text-xs font-mono font-medium tracking-wide text-cyan-300">
+              RepoSurgeon • Autonomous Code Doctor
+            </span>
+          </motion.div>
+
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
