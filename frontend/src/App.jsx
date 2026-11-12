@@ -10,6 +10,8 @@ import AuditTrailSection from './components/AuditTrailSection';
 import Footer from './components/Footer';
 import PullRequestModal from './components/PullRequestModal';
 import SecurityAuditModal from './components/SecurityAuditModal';
+import KineticCursor from './components/KineticCursor';
+import CommandPalette from './components/CommandPalette';
 
 export default function App() {
   const [status, setStatus] = useState('idle'); // 'idle' | 'running' | 'healed' | 'error'
@@ -27,6 +29,19 @@ export default function App() {
   // Modals
   const [isPROpen, setIsPROpen] = useState(false);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
+
+  // Global Cmd+K / Ctrl+K shortcut for Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Repos / Scenarios / GitHub URLs
   const [demos, setDemos] = useState([]);
@@ -224,6 +239,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-[#090A0F] relative text-zinc-100 font-sans selection:bg-blue-600/30 selection:text-white">
+      {/* Kinetic Desktop Reticle Cursor (Disabled on touch & reduced motion) */}
+      <KineticCursor />
+
       {/* Background Micro Grid */}
       <div className="fixed inset-0 bg-grid-pattern opacity-10 pointer-events-none z-0" />
 
@@ -231,7 +249,10 @@ export default function App() {
       <div className="ambient-glow-cursor" />
 
       {/* 1. Clean, Minimal Bolt.new Header (like Photo 3) */}
-      <Header onOpenAudit={() => setIsAuditOpen(true)} />
+      <Header
+        onOpenAudit={() => setIsAuditOpen(true)}
+        onOpenCommandPalette={() => setIsCommandOpen(true)}
+      />
 
       {/* 2. Hero GitHub Repository Submitting Section (like Photo 1) */}
       <HeroRepoSubmit
@@ -248,6 +269,7 @@ export default function App() {
         onStartSurgery={startSurgery}
         onOpenPR={() => setIsPROpen(true)}
         onOpenAudit={() => setIsAuditOpen(true)}
+        onOpenCommandPalette={() => setIsCommandOpen(true)}
       />
 
       {/* Sub-Navigation Quick Anchor Bar */}
@@ -334,6 +356,17 @@ export default function App() {
         isOpen={isAuditOpen}
         onClose={() => setIsAuditOpen(false)}
         auditData={auditData}
+      />
+
+      <CommandPalette
+        isOpen={isCommandOpen}
+        onClose={() => setIsCommandOpen(false)}
+        onStartSurgery={startSurgery}
+        onQuickFillSample={handleQuickFillSample}
+        onOpenAudit={() => setIsAuditOpen(true)}
+        onOpenPR={() => setIsPROpen(true)}
+        isHealed={isHealed}
+        status={status}
       />
     </div>
   );

@@ -16,9 +16,26 @@
     width: 100%;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Kinetic Desktop Cursor (Strictly disabled on touch & reduced motion) */
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  body.kinetic-cursor-active,
+  body.kinetic-cursor-active a,
+  body.kinetic-cursor-active button,
+  body.kinetic-cursor-active [role="button"],
+  body.kinetic-cursor-active [data-cursor] {
+    cursor: none !important;
+  }
+
+  body.kinetic-cursor-active input,
+  body.kinetic-cursor-active textarea,
+  body.kinetic-cursor-active select {
+    cursor: text !important;
   }
 }
 
@@ -114,7 +131,53 @@
   animation: blink-cursor 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Pointer-Tracked Spotlight Card (Zero React Re-Renders) */
+.spotlight-card {
+  position: relative;
+}
+
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    420px circle at var(--mx, -999px) var(--my, -999px),
+    rgba(56, 189, 248, 0.55),
+    rgba(99, 102, 241, 0.25) 35%,
+    transparent 70%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.25s ease;
+}
+
+.spotlight-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    460px circle at var(--mx, -999px) var(--my, -999px),
+    rgba(59, 130, 246, 0.08),
+    transparent 65%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Masked Typography Reveal Clip */
+.reveal-mask {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
 /* Monospace Code Styling */
 code, pre, kbd {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }

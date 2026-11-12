@@ -1,25 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import {
   Layers,
   Terminal,
-  Cpu,
-  ShieldCheck,
-  CheckCircle2,
-  XCircle,
   Copy,
   Check,
   ChevronDown,
   ChevronRight,
   Download,
-  Search,
-  Filter
+  Search
 } from 'lucide-react';
+import { SpotlightCard, MagneticButton } from './KineticPrimitives';
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export default function AuditTrailSection({ logs = [], status = 'idle', repoName }) {
+  const sectionRef = useRef(null);
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
   const [expandedIndices, setExpandedIndices] = useState({});
   const [copiedKey, setCopiedKey] = useState(null);
+
+  useGSAP(
+    () => {
+      if (
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ) {
+        return;
+      }
+
+      gsap.from('.audit-reveal', {
+        y: 24,
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 84%',
+          once: true,
+        },
+      });
+    },
+    { scope: sectionRef }
+  );
 
   const toggleExpand = (idx) => {
     setExpandedIndices((prev) => ({
@@ -65,43 +92,50 @@ export default function AuditTrailSection({ logs = [], status = 'idle', repoName
   });
 
   return (
-    <section id="audit-trail" className="w-full py-16 px-4 sm:px-6 lg:px-12 border-b border-zinc-800/80 bg-[#0A0B10]">
+    <section
+      ref={sectionRef}
+      id="audit-trail"
+      className="w-full py-16 px-4 sm:px-6 lg:px-12 border-b border-zinc-800/80 bg-[#0A0B10] relative z-10"
+    >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="audit-reveal flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] font-mono text-zinc-300">
               <Layers className="h-3.5 w-3.5" />
               <span>CRYPTOGRAPHIC LOGS • REAL-TIME AUDIT STREAM</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-sans">
-              System Audit Trail & Event History
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight font-display">
+              System Audit Trail &amp; Event History
             </h2>
             <p className="text-sm text-zinc-400 max-w-2xl font-sans leading-relaxed">
-              Every IPC event, isolated sandbox sub-process launch, model token generation, 
+              Every IPC event, isolated sandbox sub-process launch, model token generation,
               and patch verification checksum is immutably logged for post-mortem analysis.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <button
+            <MagneticButton
+              strength={0.18}
               onClick={downloadAuditLog}
               disabled={logs.length === 0}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-zinc-800 bg-[#12131A] text-xs font-mono text-zinc-300 hover:text-white hover:bg-zinc-800 transition disabled:opacity-40"
+              data-cursor="EXPORT"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-zinc-800 bg-[#12131A] text-xs font-mono text-zinc-300 hover:text-white hover:bg-zinc-800 hover:border-blue-500/40 transition-colors disabled:opacity-40 cursor-pointer"
             >
               <Download className="h-3.5 w-3.5 text-blue-400" />
               <span>Export Session Audit JSON</span>
-            </button>
+            </MagneticButton>
           </div>
         </div>
 
         {/* Filters & Search Toolbar */}
-        <div className="p-3 rounded-xl border border-zinc-800/80 bg-[#12131A] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="audit-reveal p-3 rounded-xl border border-zinc-800/80 bg-[#12131A] flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
             {['ALL', 'AI', 'SANDBOX', 'ERRORS'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
+                data-cursor="FILTER"
                 className={`px-3 py-1 rounded-lg text-xs font-mono transition-colors shrink-0 ${
                   filter === f
                     ? 'bg-zinc-800 text-white font-medium border border-zinc-700'
@@ -125,8 +159,9 @@ export default function AuditTrailSection({ logs = [], status = 'idle', repoName
           </div>
         </div>
 
-        {/* Logs Explorer List */}
-        <div className="rounded-xl border border-zinc-800/80 bg-[#12131A] overflow-hidden">
+        {/* Logs Explorer List inside Spotlight Frame */}
+        <div className="audit-reveal">
+          <SpotlightCard className="rounded-xl border border-zinc-800/80 bg-[#12131A] overflow-hidden">
           {filteredLogs.length === 0 ? (
             <div className="py-16 text-center space-y-3">
               <div className="h-10 w-10 rounded-full bg-zinc-900 border border-zinc-800 mx-auto flex items-center justify-center text-zinc-500">
@@ -227,6 +262,7 @@ export default function AuditTrailSection({ logs = [], status = 'idle', repoName
               })}
             </div>
           )}
+          </SpotlightCard>
         </div>
       </div>
     </section>

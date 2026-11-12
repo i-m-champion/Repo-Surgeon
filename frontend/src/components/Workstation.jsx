@@ -172,7 +172,8 @@ export default function Workstation({
           {/* Tab 1: Code */}
           <button
             onClick={() => setActiveTab('code')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all flex items-center gap-2 shadow-sm ${
+            data-cursor="CODE"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-colors flex items-center gap-2 shadow-sm ${
               activeTab === 'code'
                 ? 'bg-blue-600 text-white border-blue-400 shadow-blue-500/20'
                 : 'bg-zinc-900/90 text-slate-300 border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-zinc-700'
@@ -185,7 +186,8 @@ export default function Workstation({
           {/* Tab 2: Terminal */}
           <button
             onClick={() => setActiveTab('terminal')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all flex items-center gap-2 shadow-sm ${
+            data-cursor="TERM"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-colors flex items-center gap-2 shadow-sm ${
               activeTab === 'terminal'
                 ? 'bg-blue-600 text-white border-blue-400 shadow-blue-500/20'
                 : 'bg-zinc-900/90 text-slate-300 border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-zinc-700'
@@ -205,7 +207,8 @@ export default function Workstation({
           {/* Tab 3: Diff */}
           <button
             onClick={() => setActiveTab('diff')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all flex items-center gap-2 shadow-sm ${
+            data-cursor="DIFF"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-colors flex items-center gap-2 shadow-sm ${
               activeTab === 'diff'
                 ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-500/20'
                 : 'bg-zinc-900/90 text-slate-300 border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-zinc-700'
@@ -225,7 +228,8 @@ export default function Workstation({
           {/* Tab 4: Topology */}
           <button
             onClick={() => setActiveTab('topology')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-all flex items-center gap-2 shadow-sm ${
+            data-cursor="GRAPH"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium border transition-colors flex items-center gap-2 shadow-sm ${
               activeTab === 'topology'
                 ? 'bg-purple-600 text-white border-purple-400 shadow-purple-500/20'
                 : 'bg-zinc-900/90 text-slate-300 border-zinc-800 hover:bg-zinc-800 hover:text-white hover:border-zinc-700'
@@ -249,6 +253,7 @@ export default function Workstation({
               <button
                 onClick={downloadPatch}
                 disabled={!diff}
+                data-cursor="DOWNLOAD"
                 className="px-3 py-1.5 rounded-lg bg-zinc-850 hover:bg-zinc-800 text-slate-200 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 border border-zinc-700 transition-colors shadow-sm disabled:opacity-30 cursor-pointer"
               >
                 <Download className="h-3.5 w-3.5 text-blue-400" />
@@ -258,6 +263,7 @@ export default function Workstation({
               <button
                 onClick={copyDiffToClipboard}
                 disabled={!diff}
+                data-cursor="COPY"
                 className="px-3 py-1.5 rounded-lg bg-zinc-850 hover:bg-zinc-800 text-slate-200 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 border border-zinc-700 transition-colors shadow-sm disabled:opacity-30 cursor-pointer"
               >
                 {copiedDiff ? (
